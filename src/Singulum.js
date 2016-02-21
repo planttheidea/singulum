@@ -1,17 +1,18 @@
 import {
     bindFunction,
-    forEach,
+    forEachObject,
     getClone,
     isArray,
     isFunction,
+    isInstanceOf,
     isObject,
     isString,
     setHidden,
-    setReadonly
+    setReadonly,
+    throwError
 } from './utils';
 
 const OBJECT_ASSIGN = Object.assign;
-const OBJECT_KEYS = Object.keys;
 
 /**
  * Assigns new result to store, fires listener with new SingulumStore, and returns
@@ -40,13 +41,9 @@ const updateStoreValue = (object, key, result) => {
  * @param {string} key
  * @return {Function}
  */
-const createWrapperFunction = function(fn, key) {
+const createWrapperFunction = function(thisArg, fn, key) {
     return bindFunction(function(...args) {
-        const unshiftedArgs = [
-            this.$$store[key],
-            ...args
-        ];
-        const result = fn(...unshiftedArgs);
+        const result = fn(...args);
 
         if (result.then) {
             return result.then((resultValue) => {
@@ -55,7 +52,7 @@ const createWrapperFunction = function(fn, key) {
         }
 
         return Promise.resolve(updateStoreValue(this, key, result));
-    }, this);
+    }, thisArg);
 };
 
 /**
@@ -83,7 +80,7 @@ const createNewSingulumNamespace = (object, namespace, leaves) => {
  */
 const createNewSingulumLeaf = (branch, key, map) => {
     if (!isObject(map)) {
-        throw new Error('Must provide a map of leaves to branch.');
+        throwError('Must provide a map of leaves to branch.');
     }
 
     /**
@@ -92,11 +89,9 @@ const createNewSingulumLeaf = (branch, key, map) => {
     branch.$$initialValues[key] = getClone(map.initialValue, SingulumStore);
     branch.$$store[key] = getClone(map.initialValue, SingulumStore);
 
-    forEach(OBJECT_KEYS(map), (action) => {
-        const actionFn = map[action];
-
+    forEachObject(map, (actionFn, action) => {
         if (action !== 'initialValue' && isFunction(actionFn)) {
-            branch.$$actions[action] = createWrapperFunction.call(branch, actionFn, key);
+            branch.$$actions[action] = createWrapperFunction(branch, actionFn, key);
         }
     });
 };
@@ -129,10 +124,8 @@ class SingulumStore {
      * @returns {Object}
      */
     constructor(store) {
-        forEach(OBJECT_KEYS(store), (key) => {
-            const value = store[key];
-
-            this[key] = value instanceof Singulum ? value.store : value;
+        forEachObject(store, (value, key) => {
+            this[key] = isInstanceOf(value, Singulum) ? value.store : value;
         });
 
         return this;
@@ -152,14 +145,12 @@ class SingulumSnapshot {
      * @returns {Object}
      */
     constructor(store, $$store, snapshotBranches) {
-        forEach(OBJECT_KEYS(store), (key) => {
-            const value = $$store[key];
+        forEachObject(store, (value, key) => {
+            const $$value = $$store[key];
 
-            if (value instanceof Singulum && snapshotBranches) {
-                this[key] = new SingulumSnapshot(value.store, value.$$store, snapshotBranches);
-            } else {
-                this[key] = getClone(value, SingulumStore);
-            }
+            this[key] = isInstanceOf($$value, Singulum) && snapshotBranches ?
+                new SingulumSnapshot($$value.store, $$value.$$store, snapshotBranches) :
+                getClone($$value, SingulumStore);
         });
 
         return this;
@@ -183,8 +174,8 @@ class Singulum {
         setHidden(this, '$$snapshots', {});
         setHidden(this, '$$store', {});
 
-        forEach(OBJECT_KEYS(leaves), (key) => {
-            createNewSingulumLeaf(this, key, leaves[key]);
+        forEachObject(leaves, (leaf, key) => {
+            createNewSingulumLeaf(this, key, leaf);
         });
 
         return this;
@@ -220,11 +211,11 @@ Singulum.prototype = Object.create({
      *
      * @param {string|Object} namespace
      * @param {Object} leaves
-     * @returns {Object}
+     * @returns {Singulum}
      */
     branch(namespace, leaves) {
         if (!isString(namespace)) {
-            throw new Error('The first argument to singulum.branch must be a string.');
+            namespace = namespace.toString();
         }
 
         if (!leaves) {
@@ -254,8 +245,8 @@ Singulum.prototype = Object.create({
             return branches;
         }
 
-        forEach(OBJECT_KEYS(namespaceMap), (branchName) => {
-            branches.push(createNewSingulumNamespace(this, branchName, namespaceMap[branchName]));
+        forEachObject(namespaceMap, (branch, branchName) => {
+            branches.push(createNewSingulumNamespace(this, branchName, branch));
         });
 
         return branches;
@@ -268,12 +259,10 @@ Singulum.prototype = Object.create({
      * @returns {Singulum}
      */
     reset(resetBranches = false) {
-        forEach(OBJECT_KEYS(this.$$store), (key) => {
-            const value = this.$$store[key];
-
-            if (value instanceof Singulum && resetBranches) {
+        forEachObject(this.$$store, (value, key) => {
+            if (isInstanceOf(value, Singulum) && resetBranches) {
                 value.reset();
-            } else if (!(value instanceof SingulumSnapshot)) {
+            } else if (!isInstanceOf(value, SingulumSnapshot)) {
                 this.$$store[key] = this.$$initialValues[key];
             }
         });
@@ -293,16 +282,14 @@ Singulum.prototype = Object.create({
      * @returns {Singulum}
      */
     restore(snapshot, restoreBranches = false) {
-        if (!(snapshot instanceof SingulumSnapshot)) {
-            throw new Error('Snapshot used in restore method must be a SingulumSnapshot.');
+        if (!isInstanceOf(snapshot, SingulumSnapshot)) {
+            throwError('Snapshot used in restore method must be a SingulumSnapshot.');
         }
 
-        forEach(Object.keys(snapshot), (key) => {
-            let value = snapshot[key];
-
-            if (value instanceof SingulumSnapshot && restoreBranches) {
+        forEachObject(snapshot, (value, key) => {
+            if (isInstanceOf(value, SingulumSnapshot) && restoreBranches) {
                 this.$$store[key].restore(value, restoreBranches);
-            } else if (!(value instanceof SingulumStore)) {
+            } else if (!isInstanceOf(value, SingulumStore)) {
                 this.$$store[key] = value;
             }
         });

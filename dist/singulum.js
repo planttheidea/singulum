@@ -96,10 +96,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
 	var OBJECT_ASSIGN = Object.assign;
-	var OBJECT_KEYS = Object.keys;
 
 	/**
 	 * Assigns new result to store, fires listener with new SingulumStore, and returns
@@ -128,16 +125,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {string} key
 	 * @return {Function}
 	 */
-	var createWrapperFunction = function createWrapperFunction(fn, key) {
+	var createWrapperFunction = function createWrapperFunction(thisArg, fn, key) {
 	    return (0, _utils.bindFunction)(function () {
 	        var _this = this;
 
-	        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-	            args[_key] = arguments[_key];
-	        }
-
-	        var unshiftedArgs = [this.$$store[key]].concat(args);
-	        var result = fn.apply(undefined, _toConsumableArray(unshiftedArgs));
+	        var result = fn.apply(undefined, arguments);
 
 	        if (result.then) {
 	            return result.then(function (resultValue) {
@@ -146,7 +138,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        return Promise.resolve(updateStoreValue(this, key, result));
-	    }, this);
+	    }, thisArg);
 	};
 
 	/**
@@ -174,7 +166,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var createNewSingulumLeaf = function createNewSingulumLeaf(branch, key, map) {
 	    if (!(0, _utils.isObject)(map)) {
-	        throw new Error('Must provide a map of leaves to branch.');
+	        (0, _utils.throwError)('Must provide a map of leaves to branch.');
 	    }
 
 	    /**
@@ -183,11 +175,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    branch.$$initialValues[key] = (0, _utils.getClone)(map.initialValue, SingulumStore);
 	    branch.$$store[key] = (0, _utils.getClone)(map.initialValue, SingulumStore);
 
-	    (0, _utils.forEach)(OBJECT_KEYS(map), function (action) {
-	        var actionFn = map[action];
-
+	    (0, _utils.forEachObject)(map, function (actionFn, action) {
 	        if (action !== 'initialValue' && (0, _utils.isFunction)(actionFn)) {
-	            branch.$$actions[action] = createWrapperFunction.call(branch, actionFn, key);
+	            branch.$$actions[action] = createWrapperFunction(branch, actionFn, key);
 	        }
 	    });
 	};
@@ -228,10 +218,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    _classCallCheck(this, SingulumStore);
 
-	    (0, _utils.forEach)(OBJECT_KEYS(store), function (key) {
-	        var value = store[key];
-
-	        _this2[key] = value instanceof Singulum ? value.store : value;
+	    (0, _utils.forEachObject)(store, function (value, key) {
+	        _this2[key] = (0, _utils.isInstanceOf)(value, Singulum) ? value.store : value;
 	    });
 
 	    return this;
@@ -256,14 +244,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    _classCallCheck(this, SingulumSnapshot);
 
-	    (0, _utils.forEach)(OBJECT_KEYS(store), function (key) {
-	        var value = $$store[key];
+	    (0, _utils.forEachObject)(store, function (value, key) {
+	        var $$value = $$store[key];
 
-	        if (value instanceof Singulum && snapshotBranches) {
-	            _this3[key] = new SingulumSnapshot(value.store, value.$$store, snapshotBranches);
-	        } else {
-	            _this3[key] = (0, _utils.getClone)(value, SingulumStore);
-	        }
+	        _this3[key] = (0, _utils.isInstanceOf)($$value, Singulum) && snapshotBranches ? new SingulumSnapshot($$value.store, $$value.$$store, snapshotBranches) : (0, _utils.getClone)($$value, SingulumStore);
 	    });
 
 	    return this;
@@ -294,8 +278,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    (0, _utils.setHidden)(this, '$$snapshots', {});
 	    (0, _utils.setHidden)(this, '$$store', {});
 
-	    (0, _utils.forEach)(OBJECT_KEYS(leaves), function (key) {
-	        createNewSingulumLeaf(_this4, key, leaves[key]);
+	    (0, _utils.forEachObject)(leaves, function (leaf, key) {
+	        createNewSingulumLeaf(_this4, key, leaf);
 	    });
 
 	    return this;
@@ -332,11 +316,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *
 	     * @param {string|Object} namespace
 	     * @param {Object} leaves
-	     * @returns {Object}
+	     * @returns {Singulum}
 	     */
 	    branch: function branch(namespace, leaves) {
 	        if (!(0, _utils.isString)(namespace)) {
-	            throw new Error('The first argument to singulum.branch must be a string.');
+	            namespace = namespace.toString();
 	        }
 
 	        if (!leaves) {
@@ -369,8 +353,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return branches;
 	        }
 
-	        (0, _utils.forEach)(OBJECT_KEYS(namespaceMap), function (branchName) {
-	            branches.push(createNewSingulumNamespace(_this5, branchName, namespaceMap[branchName]));
+	        (0, _utils.forEachObject)(namespaceMap, function (branch, branchName) {
+	            branches.push(createNewSingulumNamespace(_this5, branchName, branch));
 	        });
 
 	        return branches;
@@ -388,12 +372,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var resetBranches = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
 
-	        (0, _utils.forEach)(OBJECT_KEYS(this.$$store), function (key) {
-	            var value = _this6.$$store[key];
-
-	            if (value instanceof Singulum && resetBranches) {
+	        (0, _utils.forEachObject)(this.$$store, function (value, key) {
+	            if ((0, _utils.isInstanceOf)(value, Singulum) && resetBranches) {
 	                value.reset();
-	            } else if (!(value instanceof SingulumSnapshot)) {
+	            } else if (!(0, _utils.isInstanceOf)(value, SingulumSnapshot)) {
 	                _this6.$$store[key] = _this6.$$initialValues[key];
 	            }
 	        });
@@ -418,16 +400,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var restoreBranches = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
 
-	        if (!(snapshot instanceof SingulumSnapshot)) {
-	            throw new Error('Snapshot used in restore method must be a SingulumSnapshot.');
+	        if (!(0, _utils.isInstanceOf)(snapshot, SingulumSnapshot)) {
+	            (0, _utils.throwError)('Snapshot used in restore method must be a SingulumSnapshot.');
 	        }
 
-	        (0, _utils.forEach)(Object.keys(snapshot), function (key) {
-	            var value = snapshot[key];
-
-	            if (value instanceof SingulumSnapshot && restoreBranches) {
+	        (0, _utils.forEachObject)(snapshot, function (value, key) {
+	            if ((0, _utils.isInstanceOf)(value, SingulumSnapshot) && restoreBranches) {
 	                _this7.$$store[key].restore(value, restoreBranches);
-	            } else if (!(value instanceof SingulumStore)) {
+	            } else if (!(0, _utils.isInstanceOf)(value, SingulumStore)) {
 	                _this7.$$store[key] = value;
 	            }
 	        });
@@ -520,9 +500,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Array} array
 	 * @param {Function} fn
 	 */
-	var forEach = exports.forEach = function forEach(array, fn) {
-	    for (var index = 0, length = array.length; index < length; index++) {
-	        fn(array[index], index, array);
+	var forEachObject = exports.forEachObject = function forEachObject(object, fn) {
+	    var keysArray = Object.keys(object);
+
+	    for (var index = 0, length = keysArray.length; index < length; index++) {
+	        var key = keysArray[index];
+
+	        fn(object[key], key, object);
 	    }
 	};
 
@@ -538,11 +522,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Determines if object is of type Date
+	 * Not exported because not used elsewhere
 	 *
 	 * @param {*} object
 	 * @returns {boolean}
 	 */
-	var isDate = exports.isDate = function isDate(object) {
+	var isDate = function isDate(object) {
 	    return TO_STRING.call(object) === '[object Date]';
 	};
 
@@ -554,6 +539,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var isFunction = exports.isFunction = function isFunction(object) {
 	    return TO_STRING.call(object) === '[object Function]' || typeof object === 'function';
+	};
+
+	/**
+	 * Determine if object is instance of Constructor
+	 *
+	 * @param {*} object
+	 * @param {Function} Constructor
+	 * @returns {boolean}
+	 */
+	var isInstanceOf = exports.isInstanceOf = function isInstanceOf(object, Constructor) {
+	    return object instanceof Constructor;
 	};
 
 	/**
@@ -577,16 +573,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	/**
-	 * Determines if object is undefined
-	 *
-	 * @param {*} object
-	 * @returns {boolean}
-	 */
-	var isUndefined = exports.isUndefined = function isUndefined(object) {
-	    return object === void 0;
-	};
-
-	/**
 	 * Returns clone of Singulum object with metadata stripped and child
 	 * stores with SingulumStore class applied
 	 *
@@ -605,13 +591,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var _ret = function () {
 	            var cloneObject = {};
 
-	            Object.keys(object).forEach(function (key) {
-	                var value = object[key];
-
+	            forEachObject(object, function (value, key) {
 	                cloneObject[key] = getClone(value, SingulumStore);
 	            });
 
-	            if (object instanceof SingulumStore) {
+	            if (isInstanceOf(object, SingulumStore)) {
 	                cloneObject = new SingulumStore(cloneObject);
 	            }
 
@@ -659,23 +643,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return value;
 	        },
 	        set: function set() {
-	            throw new Error('Cannot set a value for ' + property + ', as it is immutable.');
+	            throwError('Cannot set a value for ' + property + ', as it is immutable.');
 	        }
 	    });
 	};
 
+	/**
+	 * Consolidated error throwing function, mainly for minification benefits
+	 *
+	 * @param {string} error
+	 */
+	var throwError = exports.throwError = function throwError(error) {
+	    throw new Error(error);
+	};
+
 	exports.default = {
 	    bindFunction: bindFunction,
-	    forEach: forEach,
+	    forEachObject: forEachObject,
 	    getClone: getClone,
 	    isArray: isArray,
-	    isDate: isDate,
 	    isFunction: isFunction,
+	    isInstanceOf: isInstanceOf,
 	    isObject: isObject,
 	    isString: isString,
-	    isUndefined: isUndefined,
 	    setHidden: setHidden,
-	    setReadonly: setReadonly
+	    setReadonly: setReadonly,
+	    throwError: throwError
 	};
 
 /***/ }

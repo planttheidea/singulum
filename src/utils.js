@@ -19,9 +19,13 @@ export const bindFunction = (fn, thisArg) => {
  * @param {Array} array
  * @param {Function} fn
  */
-export const forEach = (array, fn) => {
-    for (let index = 0, length = array.length; index < length; index++) {
-        fn(array[index], index, array);
+export const forEachObject = (object, fn) => {
+    const keysArray = Object.keys(object);
+
+    for (let index = 0, length = keysArray.length; index < length; index++) {
+        const key = keysArray[index];
+
+        fn(object[key], key, object);
     }
 };
 
@@ -37,11 +41,12 @@ export const isArray = (object) => {
 
 /**
  * Determines if object is of type Date
+ * Not exported because not used elsewhere
  *
  * @param {*} object
  * @returns {boolean}
  */
-export const isDate = (object) => {
+const isDate = (object) => {
     return TO_STRING.call(object) === '[object Date]';
 };
 
@@ -53,6 +58,17 @@ export const isDate = (object) => {
  */
 export const isFunction = (object) => {
     return TO_STRING.call(object) === '[object Function]' || typeof object === 'function';
+};
+
+/**
+ * Determine if object is instance of Constructor
+ *
+ * @param {*} object
+ * @param {Function} Constructor
+ * @returns {boolean}
+ */
+export const isInstanceOf = (object, Constructor) => {
+    return object instanceof Constructor;
 };
 
 /**
@@ -76,16 +92,6 @@ export const isString = (object) => {
 };
 
 /**
- * Determines if object is undefined
- *
- * @param {*} object
- * @returns {boolean}
- */
-export const isUndefined = (object) => {
-    return object === void 0;
-};
-
-/**
  * Returns clone of Singulum object with metadata stripped and child
  * stores with SingulumStore class applied
  *
@@ -103,13 +109,11 @@ export const getClone = (object, SingulumStore) => {
     if (isObject(object)) {
         let cloneObject = {};
 
-        Object.keys(object).forEach((key) => {
-            const value = object[key];
-
+        forEachObject(object, (value, key) => {
             cloneObject[key] = getClone(value, SingulumStore);
         });
 
-        if (object instanceof SingulumStore) {
+        if (isInstanceOf(object, SingulumStore)) {
             cloneObject = new SingulumStore(cloneObject);
         }
 
@@ -152,21 +156,30 @@ export const setReadonly = (object, property, value) => {
             return value;
         },
         set() {
-            throw new Error(`Cannot set a value for ${property}, as it is immutable.`);
+            throwError(`Cannot set a value for ${property}, as it is immutable.`);
         }
     });
 };
 
+/**
+ * Consolidated error throwing function, mainly for minification benefits
+ *
+ * @param {string} error
+ */
+export const throwError = (error) => {
+    throw new Error(error);
+};
+
 export default {
     bindFunction,
-    forEach,
+    forEachObject,
     getClone,
     isArray,
-    isDate,
     isFunction,
+    isInstanceOf,
     isObject,
     isString,
-    isUndefined,
     setHidden,
-    setReadonly
+    setReadonly,
+    throwError
 };

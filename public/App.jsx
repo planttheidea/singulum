@@ -116,13 +116,13 @@ console.log(testStore);
 console.log(multipleTestStore);
 
 console.log('adding to count in countStore');
-counterActions.setCount('add');
+counterActions.setCount(counterStore.count, 'add');
 
 console.log('adding to array in testStore');
-testActions.setArray('test');
+testActions.setArray(testStore.array, 'test');
 
 console.log('adding to object in testStore');
-testActions.setObject({
+testActions.setObject(testStore.object, {
     foo: 'bar'
 });
 
@@ -133,16 +133,16 @@ console.log('getting counter singulum');
 console.log(counter);
 
 console.log('adding to count in countStore');
-counterActions.addCount();
+counterActions.addCount(counterStore.count);
 
 console.log('subtracting from count in countStore');
-counterActions.subtractCount();
+counterActions.subtractCount(counterStore.count);
 
 console.log('adding to count in countStore');
-counterActions.addCount();
+counterActions.addCount(counterStore.count);
 
 console.log('adding to count in countStore');
-counterActions.addCount();
+counterActions.addCount(counterStore.count);
 
 console.log('resetting countStore');
 counter.reset();
@@ -153,7 +153,7 @@ const singulumSnapshot = singulum.snapshot('beforeTest');
 console.log(singulumSnapshot);
 
 console.log('setting string in multipleTestStore');
-multipleTestActions.setString('test');
+multipleTestActions.setString(multipleTestStore.string, 'test');
 
 console.log('getting singulum store');
 console.log(singulum.store);
@@ -169,7 +169,7 @@ console.log('getting childCountStore');
 console.log(counterChild.store);
 
 console.log('adding to count in childCountStore');
-counterChild.actions.setCount('add');
+counterChild.actions.setCount(counterChild.store.count, 'add');
 
 console.log('getting childCountStore');
 console.log(counterChild.store);
@@ -178,7 +178,7 @@ console.log('getting singulum store');
 console.log(singulum.store);
 
 console.log('setting test in countStore');
-counterActions.setTest({
+counterActions.setTest(counterStore.object, {
     some: 'thing'
 });
 
@@ -212,7 +212,7 @@ asyncTest.watch((store) => {
 });
 
 console.log('setting count in asyncTestStore');
-asyncTest.actions.setCount()
+asyncTest.actions.setCount(asyncTest.store.count)
     .then(() => {
         console.log('getting snapshot of test');
         const testSnapshot = test.snapshot(true);

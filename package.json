@@ -51,5 +51,5 @@
     "dev": "NODE_ENV=development ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --progress --colors",
     "test": "NODE_ENV=test ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --progress --colors --config=webpack.config.test.js"
   },
-  "version": "0.1.0"
+  "version": "0.2.0"
 }
