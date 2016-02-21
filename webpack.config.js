@@ -26,10 +26,10 @@ module.exports = {
         }
     },
 
-    devtool:"source-map",
+    devtool:"#cheap-module-eval-source-map",
 
     entry: [
-        path.resolve(__dirname, "public/App")
+        path.resolve(__dirname, "src/index")
     ],
 
     eslint:{
