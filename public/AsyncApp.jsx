@@ -26,23 +26,9 @@ class AsyncApp extends React.Component {
          */
         asyncActions.getName()
             .then(() => {
-                asyncActions.setLoading(this.state.loading, {
-                    name: false
-                });
-
                 asyncActions.getAllData()
                     .then(() => {
-                        asyncActions.setLoading(this.state.loading, {
-                            author: false,
-                            description: false
-                        });
-
-                        asyncActions.getVersion()
-                            .then(() => {
-                                asyncActions.setLoading(this.state.loading, {
-                                    version: false
-                                })
-                            });
+                        asyncActions.getVersion();
                     });
             });
     }

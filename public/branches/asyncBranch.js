@@ -17,7 +17,7 @@ const getData = (response) => {
  *
  * @returns {Promise}
  */
-const getAllData = (currentState) => {
+const getAllData = () => {
     return axios
         .get('/api', {
             params: {
@@ -28,8 +28,14 @@ const getAllData = (currentState) => {
         })
         .then(getData)
         .then((data) => {
+            branch.actions.setLoading({
+                author: false,
+                description: false,
+                name: false
+            });
+
             return {
-                ...currentState,
+                ...branch.store,
                 ...data
             };
         });
@@ -49,6 +55,10 @@ const getName = () => {
         })
         .then(getData)
         .then((data) => {
+            branch.actions.setLoading({
+                name: false
+            });
+
             return data.name;
         });
 };
@@ -68,6 +78,10 @@ const getVersion = () => {
         })
         .then(getData)
         .then((data) => {
+            branch.actions.setLoading({
+                version: false
+            });
+
             return data.version;
         });
 };
@@ -75,14 +89,13 @@ const getVersion = () => {
 /**
  * Sets loading object based on merging newLoadingObject with currentLoadingObject
  *
- * @param {Object} currentLoadingObject
- * @param {Object} newLoadingObject
+ * @param {Object} loadingObject
  * @returns {Object}
  */
-const setLoading = (currentLoadingObject, newLoadingObject) => {
+const setLoading = (loadingObject) => {
     return {
-        ...currentLoadingObject,
-        ...newLoadingObject
+        ...branch.store.loading,
+        ...loadingObject
     };
 };
 
@@ -121,4 +134,6 @@ const initialValues = {
  * in the object that it returns will update a value on the state, rather than being dedicated to a specific
  * property
  */
-export default singulum.branch(actions, initialValues, 'asyncBranch');
+const branch = singulum.branch(actions, initialValues, 'asyncBranch');
+
+export default branch;
