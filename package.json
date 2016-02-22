@@ -3,7 +3,7 @@
   "bugs": {
     "url": "https://github.com/planttheidea/singulum/issues"
   },
-  "description": "Immutable JS ojbects with a natural API",
+  "description": "State management sanity with minimal effort",
   "devDependencies": {
     "axios": "^0.9.1",
     "babel": "^6.5.2",
@@ -53,5 +53,5 @@
     "simple-todos": "NODE_ENV=development ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --progress --colors --config=webpack.config.simpleTodos.js",
     "todos-app": "NODE_ENV=development ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --progress --colors --config=webpack.config.TodosApp.js"
   },
-  "version": "0.3.0"
+  "version": "0.4.0"
 }

@@ -1,40 +1,40 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import todoBranch from './branches/todoBranch';
+import todosBranch from './branches/todosBranch';
 
-const todoActions = todoBranch.actions;
+const todosActions = todosBranch.actions;
 
 class TodoApp extends React.Component {
     constructor(props) {
         super(props);
     }
 
-    state = todoBranch.store;
+    state = todosBranch.store;
 
     componentDidMount() {
-        todoBranch.watch(this.onStoreChange);
+        todosBranch.watch(this.onStoreChange);
     }
 
     componentWillUnmount() {
-        todoBranch.unwatch(this.onStoreChange);
+        todosBranch.unwatch(this.onStoreChange);
     }
 
     onClickAddTodo = () => {
-        todoActions.addTodo(this.state.todos, this.refs.todoValue.value);
+        todosActions.addTodo(this.state.todos, this.refs.todoValue.value);
 
         this.refs.todoValue.value = '';
     };
 
     onClickEditTodo = () => {
-        todoActions.editTodo(this.state.todos, this.refs.editId.value, this.refs.editValue.value);
+        todosActions.editTodo(this.state.todos, this.refs.editId.value, this.refs.editValue.value);
 
         this.refs.editId.value = '';
         this.refs.editValue.value = '';
     };
 
     onClickRemoveTodo = () => {
-        todoActions.removeTodo(this.state.todos, this.refs.removeId.value);
+        todosActions.removeTodo(this.state.todos, this.refs.removeId.value);
 
         this.refs.removeId.value = '';
     };

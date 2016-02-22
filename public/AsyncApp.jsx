@@ -5,6 +5,12 @@ import asyncBranch from './branches/asyncBranch';
 
 const asyncActions = asyncBranch.actions;
 
+const STYLES = {
+    h3: {
+        marginBottom: 5
+    }
+};
+
 class AsyncApp extends React.Component {
     constructor(props) {
         super(props);
@@ -16,7 +22,7 @@ class AsyncApp extends React.Component {
         asyncBranch.watch(this.onStoreChange);
 
         /**
-         * This is intentially staggered, so that the results can be seen to full effect
+         * This is intentionally staggered, so that the results can be seen to full effect
          */
         asyncActions.getName()
             .then(() => {
@@ -53,7 +59,7 @@ class AsyncApp extends React.Component {
         return (
             <div>
                 <div>
-                    <h3>
+                    <h3 style={STYLES.h3}>
                         Name
                     </h3>
 
@@ -61,7 +67,7 @@ class AsyncApp extends React.Component {
                 </div>
 
                 <div>
-                    <h3>
+                    <h3 style={STYLES.h3}>
                         Description
                     </h3>
 
@@ -69,7 +75,7 @@ class AsyncApp extends React.Component {
                 </div>
 
                 <div>
-                    <h3>
+                    <h3 style={STYLES.h3}>
                         Author
                     </h3>
 
@@ -77,7 +83,7 @@ class AsyncApp extends React.Component {
                 </div>
 
                 <div>
-                    <h3>
+                    <h3 style={STYLES.h3}>
                         Version
                     </h3>
 

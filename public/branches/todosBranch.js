@@ -36,11 +36,16 @@ const removeTodo = (todos = [], id) => {
     ];
 };
 
-export default singulum.branch('todoBranch', {
+const actions = {
     todos: {
         addTodo,
         editTodo,
-        removeTodo,
-        initialValue: []
+        removeTodo
     }
-});
+};
+
+const initialValues = {
+    todos: []
+};
+
+export default singulum.branch(actions, initialValues, 'todoBranch');

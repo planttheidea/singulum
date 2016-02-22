@@ -41,7 +41,7 @@ const todos = (state = [], action = {}) => {
     }
 };
 
-const todosSingulum = singulum.branch('todosStore', {
+const todosSingulum = singulum.branch({
     todos: {
         addTodo(todos = [], value) {
             return [
@@ -110,10 +110,11 @@ const todosSingulum = singulum.branch('todosStore', {
                 default:
                     return todos;
             }
-        },
-        initialValue: []
+        }
     }
-});
+}, {
+    todos: []
+}, 'todosStore');
 
 const empty = [];
 const oneAdded = [

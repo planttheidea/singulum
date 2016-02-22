@@ -2,7 +2,6 @@ import {
     bindFunction,
     forEachObject,
     getClone,
-    isArray,
     isFunction,
     isInstanceOf,
     isObject,
@@ -14,6 +13,8 @@ import {
 
 const OBJECT_ASSIGN = Object.assign;
 
+let namespaceIncrementer = 0;
+
 /**
  * Assigns new result to store, fires listener with new SingulumStore, and returns
  * Promise with new result
@@ -24,17 +25,20 @@ const OBJECT_ASSIGN = Object.assign;
  * @returns {Promise}
  */
 const updateStoreValue = (object, result, key) => {
+    /**
+     * Apply new result value to the store, scoped if the key is provided
+     */
     if (key) {
         object.$$store[key] = result;
     } else {
-        object.$$store = {
-            ...object.$$store,
-            ...result
-        };
+        object.$$store = result;
     }
 
-    if (isFunction(object.$$listener)) {
-        object.$$listener(object.store);
+    /**
+     * If there is a watcher, fire it
+     */
+    if (isFunction(object.$$watcher)) {
+        object.$$watcher(object.store);
     }
 
     return result;
@@ -44,6 +48,7 @@ const updateStoreValue = (object, result, key) => {
  * Creates bound and wrapped function to store new value internally and invoke listener
  * If function is asyncronous, it waits for the promise to be resolved before firing
  *
+ * @param {Object} thisArg
  * @param {Function} fn
  * @param {string} key
  * @return {Function}
@@ -52,12 +57,18 @@ const createWrapperFunction = function(thisArg, fn, key) {
     return bindFunction(function(...args) {
         const result = fn(...args);
 
+        /**
+         * If the result is a Promise, wait for resolution and then return the data
+         */
         if (result.then) {
             return result.then((resultValue) => {
                 return updateStoreValue(this, resultValue, key);
             });
         }
 
+        /**
+         * Otherwise, wrap the return data in a native Promise and return it
+         */
         return Promise.resolve(updateStoreValue(this, result, key));
     }, thisArg);
 };
@@ -67,11 +78,20 @@ const createWrapperFunction = function(thisArg, fn, key) {
  *
  * @param {Object} object
  * @param {string} namespace
- * @param {Object} leaves
+ * @param {Object} actions
+ * @param {Object} initialValues
  * @returns {Object}
  */
-const createNewSingulumNamespace = (object, namespace, leaves) => {
-    setReadonly(object, namespace, new Singulum(leaves));
+const createNewSingulumNamespace = (object, namespace, actions = {}, initialValues = {}) => {
+    /**
+     * if no namespace is provided, use the simple counter to create a unique entry
+     */
+    if (!namespace) {
+        namespace = namespaceIncrementer;
+        namespaceIncrementer++;
+    }
+
+    setReadonly(object, namespace, new Singulum(actions, initialValues));
 
     object.$$store[namespace] = object[namespace];
 
@@ -82,29 +102,34 @@ const createNewSingulumNamespace = (object, namespace, leaves) => {
  * Creates new item in the store, and creates related action with wrapper
  *
  * @param {Object} branch
- * @param {string} key
- * @param {Object} map
+ * @param {Object} actions
+ * @param {Object} initialValues
  */
-const createNewSingulumLeaf = (branch, map, key) => {
-    if (!isObject(map) && !isFunction(map)) {
-        throwError('Must provide a map of leaves to branch.');
-    }
+const createNewSingulumLeaves = (branch, actions = {}, initialValues = {}) => {
+    forEachObject(initialValues, (initialValue, storeKey) => {
+        /**
+         * Create separate clones for initialValues and store, so that references between
+         * the two do not exist
+         */
+        branch.$$initialValues[storeKey] = getClone(initialValue, SingulumStore);
+        branch.$$store[storeKey] = getClone(initialValue, SingulumStore);
+    });
 
-    /**
-     * @note create unique clones for each so that deeply nested object references don't exist
-    */
-    if (isObject(map)) {
-        branch.$$initialValues[key] = getClone(map.initialValue, SingulumStore);
-        branch.$$store[key] = getClone(map.initialValue, SingulumStore);
-
-        forEachObject(map, (actionFn, action) => {
-            if (action !== 'initialValue' && isFunction(actionFn)) {
-                branch.$$actions[action] = createWrapperFunction(branch, actionFn, key);
-            }
-        });
-    } else {
-        branch.$$actions[key] = createWrapperFunction(branch, map);
-    }
+    forEachObject(actions, (action, actionKey) => {
+        /**
+         * if action is a function, then it applies to the entire state
+         */
+        if (isFunction(action)) {
+            branch.$$actions[actionKey] = createWrapperFunction(branch, action);
+        } else if (isObject(action)) {
+            /**
+             * if action is a map of functions, it applies to a specific key on the store
+             */
+            forEachObject(action, (actionFn, actionFnKey) => {
+                branch.$$actions[actionFnKey] = createWrapperFunction(branch, actionFn, actionKey);
+            });
+        }
+    });
 };
 
 /**
@@ -117,7 +142,7 @@ class SingulumActions {
      * @param {Object} actions
      * @returns {Object}
      */
-    constructor(actions) {
+    constructor(actions = {}) {
         OBJECT_ASSIGN(this, actions);
 
         return this;
@@ -134,7 +159,7 @@ class SingulumStore {
      * @param {Object} store
      * @returns {Object}
      */
-    constructor(store) {
+    constructor(store = {}) {
         forEachObject(store, (value, key) => {
             this[key] = isInstanceOf(value, Singulum) ? value.store : value;
         });
@@ -155,7 +180,7 @@ class SingulumSnapshot {
      * @param {boolean} snapshotBranches
      * @returns {Object}
      */
-    constructor(store, $$store, snapshotBranches) {
+    constructor(store = {}, $$store = {}, snapshotBranches) {
         forEachObject(store, (value, key) => {
             const $$value = $$store[key];
 
@@ -175,23 +200,18 @@ class Singulum {
     /**
      * Create singulum infrastructure, and populate leaves provided
      *
-     * @param {Object} leaves
+     * @param {Object} actions
+     * @param {Object} initialValues
      * @returns {Singulum}
      */
-    constructor(leaves = {}) {
+    constructor(actions = {}, initialValues = {}) {
         setHidden(this, '$$actions', []);
         setHidden(this, '$$initialValues', {});
-        setHidden(this, '$$listener', null);
+        setHidden(this, '$$watcher', null);
         setHidden(this, '$$snapshots', {});
         setHidden(this, '$$store', {});
 
-        forEachObject(leaves, (leaf, key) => {
-            if (isFunction(leaf)) {
-                createNewSingulumLeaf(this, leaf, key);
-            } else {
-                createNewSingulumLeaf(this, leaf, key);
-            }
-        });
+        createNewSingulumLeaves(this, actions, initialValues);
 
         return this;
     }
@@ -224,47 +244,20 @@ Singulum.prototype = Object.create({
     /**
      * Create namespaced Singulum child
      *
-     * @param {string|Object} namespace
-     * @param {Object} leaves
+     * @param {Object} actions
+     * @param {Object} initialValues
+     * @param {string} namespace
      * @returns {Singulum}
      */
-    branch(namespace, leaves) {
-        if (!isString(namespace)) {
+    branch(actions = {}, initialValues = {}, namespace) {
+        /**
+         * if a namespace is provided but it isn't a string value, make it one
+         */
+        if (namespace && !isString(namespace)) {
             namespace = namespace.toString();
         }
 
-        if (!leaves) {
-            return this[namespace];
-        }
-
-        return createNewSingulumNamespace(this, namespace, leaves);
-    },
-
-    /**
-     * Convenience method to create multiple branches in one actions,
-     * returns array of created branches
-     *
-     * @param {Array|Object} namespaceMap
-     * @returns {Array}
-     */
-    branches(namespaceMap) {
-        let branches = [];
-
-        if (isArray(namespaceMap)) {
-            namespaceMap.forEach((branchName) => {
-                if (isString(branchName)) {
-                    branches.push(this[branchName]);
-                }
-            });
-
-            return branches;
-        }
-
-        forEachObject(namespaceMap, (branch, branchName) => {
-            branches.push(createNewSingulumNamespace(this, branchName, branch));
-        });
-
-        return branches;
+        return createNewSingulumNamespace(this, namespace, actions, initialValues);
     },
 
     /**
@@ -276,14 +269,24 @@ Singulum.prototype = Object.create({
     reset(resetBranches = false) {
         forEachObject(this.$$store, (value, key) => {
             if (isInstanceOf(value, Singulum) && resetBranches) {
+                /**
+                 * if snapshot value is a Singulum and you want to reset child branches, then trigger
+                 * .reset() on child branch
+                 */
                 value.reset();
             } else if (!isInstanceOf(value, SingulumSnapshot)) {
+                /**
+                 * If the snapshot value is a non-Singulum value, re-apply it to the store
+                 */
                 this.$$store[key] = this.$$initialValues[key];
             }
         });
 
-        if (isFunction(this.$$listener)) {
-            this.$$listener(this.store);
+        /**
+         * If there is a watcher, fire it
+         */
+        if (isFunction(this.$$watcher)) {
+            this.$$watcher(this.store);
         }
 
         return this;
@@ -297,20 +300,34 @@ Singulum.prototype = Object.create({
      * @returns {Singulum}
      */
     restore(snapshot, restoreBranches = false) {
+        /**
+         * Make sure snapshot passed is a SingulumSnapshot
+         */
         if (!isInstanceOf(snapshot, SingulumSnapshot)) {
             throwError('Snapshot used in restore method must be a SingulumSnapshot.');
         }
 
         forEachObject(snapshot, (value, key) => {
             if (isInstanceOf(value, SingulumSnapshot) && restoreBranches) {
+                /**
+                 * if the snapshot value is a SingulumSnapshot and you want to reset
+                 * child branches, then trigger restore on the child branch passing value
+                 * as branch's snapshot
+                 */
                 this.$$store[key].restore(value, restoreBranches);
             } else if (!isInstanceOf(value, SingulumStore)) {
+                /**
+                 * If the snapshot value is not a Singulum, re-apply it to the store
+                 */
                 this.$$store[key] = value;
             }
         });
 
-        if (isFunction(this.$$listener)) {
-            this.$$listener(this.store);
+        /**
+         * If there is a watcher, fire it
+         */
+        if (isFunction(this.$$watcher)) {
+            this.$$watcher(this.store);
         }
 
         return this;
@@ -327,25 +344,28 @@ Singulum.prototype = Object.create({
     },
 
     /**
-     * Clear out callback bound to $$listener
+     * Clear out callback bound to $$watcher
      *
      * @returns {Singulum}
      */
     unwatch() {
-        this.$$listener = null;
+        this.$$watcher = null;
 
         return this;
     },
 
     /**
-     * Add callback to $$listener, to be fired whenever store updates
+     * Add callback to $$watcher, to be fired whenever store updates
      *
      * @param {Function} callback
      * @returns {Singulum}
      */
     watch(callback) {
+        /**
+         * Make sure callback is actually a function before setting it
+         */
         if (isFunction(callback)) {
-            this.$$listener = callback;
+            this.$$watcher = callback;
         }
 
         return this;

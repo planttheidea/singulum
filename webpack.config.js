@@ -1,11 +1,15 @@
-var path = require("path"),
+var fs = require("fs"),
+    path = require("path"),
     webpack = require("webpack"),
+    packageJson = fs.readFileSync("package.json"),
+    packageJsonParsed = JSON.parse(packageJson),
     banner = '';
 
-banner += 'Library: singulum\n';
-banner += 'Description: manage your JavaScript application state with predictability and minimal boilerplate\n';
-banner += 'Author: Tony Quetano\n';
-banner += 'License: MIT';
+banner += 'Library: ' + packageJsonParsed.name + '\n';
+banner += 'Description: ' + packageJsonParsed.description + '\n';
+banner += 'Author: ' + packageJsonParsed.author + '\n';
+banner += 'Version: ' + packageJsonParsed.version + '\n';
+banner += 'License: ' + packageJsonParsed.license;
 
 module.exports = {
     cache:true,

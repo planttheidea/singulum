@@ -35,7 +35,7 @@ export const forEachObject = (object, fn) => {
  * @param {*} object
  * @returns {boolean}
  */
-export const isArray = (object) => {
+const isArray = (object) => {
     return TO_STRING.call(object) === '[object Array]';
 };
 
@@ -174,7 +174,6 @@ export default {
     bindFunction,
     forEachObject,
     getClone,
-    isArray,
     isFunction,
     isInstanceOf,
     isObject,

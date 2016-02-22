@@ -17,7 +17,7 @@ const getData = (response) => {
  *
  * @returns {Promise}
  */
-const getAllData = () => {
+const getAllData = (currentState) => {
     return axios
         .get('/api', {
             params: {
@@ -26,7 +26,13 @@ const getAllData = () => {
                 name: 'Singulum (overwritten by getAllData)'
             }
         })
-        .then(getData);
+        .then(getData)
+        .then((data) => {
+            return {
+                ...currentState,
+                ...data
+            };
+        });
 };
 
 /**
@@ -81,29 +87,38 @@ const setLoading = (currentLoadingObject, newLoadingObject) => {
 };
 
 /**
+ * Set actions, where top-level functions update all state, and mapped functions update the key they map to
+ */
+const actions = {
+    getAllData,
+    loading: {
+        setLoading
+    },
+    name: {
+        getName
+    },
+    version: {
+        getVersion
+    }
+};
+
+/**
+ * initial values of state
+ */
+const initialValues = {
+    author: '',
+    loading: {
+        author: true,
+        name: true,
+        version: true
+    },
+    name: '',
+    version: ''
+};
+
+/**
  * Declaration of the asyncBranch, notice that getAllData is not parameter-specific, meaning every key
  * in the object that it returns will update a value on the state, rather than being dedicated to a specific
  * property
  */
-export default singulum.branch('asyncBranch', {
-    author: {
-        initialValue: ''
-    },
-    getAllData,
-    loading: {
-        setLoading,
-        initialValue: {
-            author: true,
-            name: true,
-            version: true
-        }
-    },
-    name: {
-        getName,
-        initialValue: ''
-    },
-    version: {
-        getVersion,
-        initialValue: ''
-    }
-});
+export default singulum.branch(actions, initialValues, 'asyncBranch');
