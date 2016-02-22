@@ -65,7 +65,7 @@ const createWrapperFunction = function(thisArg, fn, key) {
         /**
          * If the result is a Promise, wait for resolution and then return the data
          */
-        if (result.then) {
+        if (isFunction(result.then)) {
             return result.then((resultValue) => {
                 return updateStoreValue(this, resultValue, key);
             });
