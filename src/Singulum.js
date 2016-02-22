@@ -2,6 +2,7 @@ import {
     bindFunction,
     forEachObject,
     getClone,
+    isArray,
     isFunction,
     isInstanceOf,
     isObject,
@@ -13,6 +14,10 @@ import {
 
 const OBJECT_ASSIGN = Object.assign;
 
+/**
+ * This is a basic counter in case a namespace is not provided when creating
+ * a branch
+ */
 let namespaceIncrementer = 0;
 
 /**
@@ -130,6 +135,17 @@ const createNewSingulumLeaves = (branch, actions = {}, initialValues = {}) => {
             });
         }
     });
+};
+
+/**
+ * Gets clone of value from branch store based on key
+ *
+ * @param {Object} branch
+ * @param {string} key
+ * @returns {*}
+ */
+const getLeaf = (branch, key) => {
+    return getClone(branch.$$store[key], SingulumStore);
 };
 
 /**
@@ -258,6 +274,39 @@ Singulum.prototype = Object.create({
         }
 
         return createNewSingulumNamespace(this, namespace, actions, initialValues);
+    },
+
+    /**
+     * Based on key or array of keys, returns values in store associated
+     * If leaves is an array, an array of values in the same order as keys passed
+     * is returned
+     *
+     * @param {string|Array} leaves
+     * @returns {*}
+     */
+    pluck(leaves) {
+        /**
+         * if nothing is passed, just return the store
+         */
+        if (!leaves) {
+            return this.store;
+        }
+
+        /**
+         * if its a single key, get the leaf
+         */
+        if (isString(leaves)) {
+            return getLeaf(this, leaves);
+        }
+
+        /**
+         * if its an array of keys, get all the leaves
+         */
+        if (isArray(leaves)) {
+            return leaves.map((leaf) => {
+                return getLeaf(this, leaf);
+            });
+        }
     },
 
     /**

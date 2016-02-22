@@ -94,7 +94,7 @@ const getVersion = () => {
  */
 const setLoading = (loadingObject) => {
     return {
-        ...branch.store.loading,
+        ...branch.pluck('loading'),
         ...loadingObject
     };
 };
