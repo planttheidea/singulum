@@ -12,6 +12,12 @@ process.env.WEBPACK_PORT = 4000;
 app.set("views", __dirname + "/public/views");
 app.set("view engine", "ejs");
 
+app.get('/api', function (req, res) {
+    setTimeout(function() {
+        res.json(req.query);
+    }, 1000);
+});
+
 // direct routes
 app.get("*", function(req, res) {
     res.render("index")

@@ -5,6 +5,7 @@
   },
   "description": "Immutable JS ojbects with a natural API",
   "devDependencies": {
+    "axios": "^0.9.1",
     "babel": "^6.5.2",
     "babel-cli": "^6.5.1",
     "babel-eslint": "^5.0.0",
@@ -44,6 +45,7 @@
     "url": "git+https://github.com/planttheidea/singulum.git"
   },
   "scripts": {
+    "async-app": "NODE_ENV=development ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --progress --colors --config=webpack.config.AsyncApp.js",
     "build": "NODE_ENV=development ./node_modules/webpack/bin/webpack.js --progress --colors",
     "build-minified": "NODE_ENV=production ./node_modules/webpack/bin/webpack.js --progress --colors --config=webpack.config.minified.js",
     "compile": "./node_modules/babel-cli/lib/babel/index.js -d lib/ src/",
@@ -51,5 +53,5 @@
     "simple-todos": "NODE_ENV=development ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --progress --colors --config=webpack.config.simpleTodos.js",
     "todos-app": "NODE_ENV=development ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --progress --colors --config=webpack.config.TodosApp.js"
   },
-  "version": "0.2.0"
+  "version": "0.3.0"
 }

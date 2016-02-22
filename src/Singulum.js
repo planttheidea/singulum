@@ -23,8 +23,15 @@ const OBJECT_ASSIGN = Object.assign;
  * @param {*} result
  * @returns {Promise}
  */
-const updateStoreValue = (object, key, result) => {
-    object.$$store[key] = result;
+const updateStoreValue = (object, result, key) => {
+    if (key) {
+        object.$$store[key] = result;
+    } else {
+        object.$$store = {
+            ...object.$$store,
+            ...result
+        };
+    }
 
     if (isFunction(object.$$listener)) {
         object.$$listener(object.store);
@@ -47,11 +54,11 @@ const createWrapperFunction = function(thisArg, fn, key) {
 
         if (result.then) {
             return result.then((resultValue) => {
-                return updateStoreValue(this, key, resultValue);
+                return updateStoreValue(this, resultValue, key);
             });
         }
 
-        return Promise.resolve(updateStoreValue(this, key, result));
+        return Promise.resolve(updateStoreValue(this, result, key));
     }, thisArg);
 };
 
@@ -78,22 +85,26 @@ const createNewSingulumNamespace = (object, namespace, leaves) => {
  * @param {string} key
  * @param {Object} map
  */
-const createNewSingulumLeaf = (branch, key, map) => {
-    if (!isObject(map)) {
+const createNewSingulumLeaf = (branch, map, key) => {
+    if (!isObject(map) && !isFunction(map)) {
         throwError('Must provide a map of leaves to branch.');
     }
 
     /**
      * @note create unique clones for each so that deeply nested object references don't exist
     */
-    branch.$$initialValues[key] = getClone(map.initialValue, SingulumStore);
-    branch.$$store[key] = getClone(map.initialValue, SingulumStore);
+    if (isObject(map)) {
+        branch.$$initialValues[key] = getClone(map.initialValue, SingulumStore);
+        branch.$$store[key] = getClone(map.initialValue, SingulumStore);
 
-    forEachObject(map, (actionFn, action) => {
-        if (action !== 'initialValue' && isFunction(actionFn)) {
-            branch.$$actions[action] = createWrapperFunction(branch, actionFn, key);
-        }
-    });
+        forEachObject(map, (actionFn, action) => {
+            if (action !== 'initialValue' && isFunction(actionFn)) {
+                branch.$$actions[action] = createWrapperFunction(branch, actionFn, key);
+            }
+        });
+    } else {
+        branch.$$actions[key] = createWrapperFunction(branch, map);
+    }
 };
 
 /**
@@ -175,7 +186,11 @@ class Singulum {
         setHidden(this, '$$store', {});
 
         forEachObject(leaves, (leaf, key) => {
-            createNewSingulumLeaf(this, key, leaf);
+            if (isFunction(leaf)) {
+                createNewSingulumLeaf(this, leaf, key);
+            } else {
+                createNewSingulumLeaf(this, leaf, key);
+            }
         });
 
         return this;
