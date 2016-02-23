@@ -34,8 +34,11 @@ A simple getter, returning a shallowly cloned and frozen `SingulumStore` object 
 
 #### .branch(actions[, initialValues, displayName])
 *@param {Object} actions*
+
 *@param {Object} initialValues (optional, defaults to {})*
+
 *@param {string} displayName (optional, defaults to numeric counter)*
+
 *@returns {Singulum}*
 
 ```
@@ -68,6 +71,7 @@ The cool thing is, because every branch is a `Singulum` itself, you can branch a
 
 #### .pluck([key])
 *@param {string|Array} key*
+
 *@returns {*}*
 
 ```
@@ -90,6 +94,7 @@ Resets the store for the branch to the values originally provided in its creatio
 
 #### .snapshot([snapshotBranches])
 *@param {boolean} snapshotBranches (optional, defaults to false)*
+
 *@returns {SingulumSnapshot}*
 
 ```
@@ -102,7 +107,9 @@ Creates and returns a snapshot of the current store's values. If true is passed 
 
 #### .restore(snapshot[, resetBranches])
 *@param {SingulumSnapshot} snapshot*
+
 *@param {boolean} resetBranches (optional, defaults to false)*
+
 *@returns {Singulum}*
 
 ```
@@ -115,6 +122,7 @@ Restores the branch's store to its state when the snapshot was taken (see .snaps
 
 #### .watch(callback)
 *@param {Function} callback*
+
 *@returns {Singulum}*
 
 ```
