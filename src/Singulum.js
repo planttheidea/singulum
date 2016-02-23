@@ -13,6 +13,7 @@ import {
 } from './utils';
 
 const OBJECT_ASSIGN = Object.assign;
+const OBJECT_FREEZE = Object.freeze;
 
 /**
  * This is a basic counter in case a namespace is not provided when creating
@@ -153,13 +154,14 @@ const getLeaf = (branch, key) => {
  */
 class SingulumActions {
     /**
-     * Create shallow clone of internal actions, and freeze
+     * Create shallowly cloned and frozen object of internal actions, and freeze
      *
      * @param {Object} actions
      * @returns {Object}
      */
     constructor(actions = {}) {
         OBJECT_ASSIGN(this, actions);
+        OBJECT_FREEZE(this);
 
         return this;
     }
@@ -170,7 +172,8 @@ class SingulumActions {
  */
 class SingulumStore {
     /**
-     * Create shallow clone of store, including stores branched from it, and freeze
+     * Create shallowly cloned and frozen object of store, including stores
+     * branched from it
      *
      * @param {Object} store
      * @returns {Object}
@@ -179,6 +182,8 @@ class SingulumStore {
         forEachObject(store, (value, key) => {
             this[key] = isInstanceOf(value, Singulum) ? value.store : value;
         });
+
+        OBJECT_FREEZE(this);
 
         return this;
     }
@@ -316,6 +321,8 @@ Singulum.prototype = Object.create({
      * @returns {Singulum}
      */
     reset(resetBranches = false) {
+        let newStore = {};
+
         forEachObject(this.$$store, (value, key) => {
             if (isInstanceOf(value, Singulum) && resetBranches) {
                 /**
@@ -327,9 +334,11 @@ Singulum.prototype = Object.create({
                 /**
                  * If the snapshot value is a non-Singulum value, re-apply it to the store
                  */
-                this.$$store[key] = this.$$initialValues[key];
+                newStore[key] = this.$$initialValues[key];
             }
         });
+
+        this.$$store = newStore;
 
         /**
          * If there is a watcher, fire it
