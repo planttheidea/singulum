@@ -23,11 +23,9 @@ const OBJECT_FREEZE = Object.freeze;
 let namespaceIncrementer = 0;
 
 const fireWatchers = (object) => {
-    if (object.$$watchers.length) {
-        object.$$watchers.forEach((watcher) => {
-            watcher(object.store);
-        });
-    }
+    object.$$watchers.forEach((watcher) => {
+        watcher(object.store);
+    });
 };
 
 /**
