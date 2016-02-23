@@ -22,6 +22,14 @@ const OBJECT_FREEZE = Object.freeze;
  */
 let namespaceIncrementer = 0;
 
+const fireWatchers = (object) => {
+    if (object.$$watchers.length) {
+        object.$$watchers.forEach((watcher) => {
+            watcher(object.store);
+        });
+    }
+};
+
 /**
  * Assigns new result to store, fires listener with new SingulumStore, and returns
  * Promise with new result
@@ -44,11 +52,7 @@ const updateStoreValue = (object, result, key) => {
     /**
      * If there is a watcher, fire it
      */
-    if (object.$$watchers.length) {
-        object.$$watchers.forEach((watcher) => {
-            watcher(object.store);
-        });
-    }
+    fireWatchers(object);
 
     return result;
 };
@@ -346,9 +350,7 @@ Singulum.prototype = Object.create({
         /**
          * If there is a watcher, fire it
          */
-        if (isFunction(this.$$watchers)) {
-            this.$$watchers(this.store);
-        }
+        fireWatchers(this);
 
         return this;
     },
@@ -387,9 +389,7 @@ Singulum.prototype = Object.create({
         /**
          * If there is a watcher, fire it
          */
-        if (isFunction(this.$$watchers)) {
-            this.$$watchers(this.store);
-        }
+        fireWatchers(this);
 
         return this;
     },
