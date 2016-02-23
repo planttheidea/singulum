@@ -1,5 +1,6 @@
 import {
     bindFunction,
+    findIndex,
     forEachObject,
     getClone,
     isArray,
@@ -43,8 +44,10 @@ const updateStoreValue = (object, result, key) => {
     /**
      * If there is a watcher, fire it
      */
-    if (isFunction(object.$$watcher)) {
-        object.$$watcher(object.store);
+    if (object.$$watchers.length) {
+        object.$$watchers.forEach((watcher) => {
+            watcher(object.store);
+        });
     }
 
     return result;
@@ -228,7 +231,7 @@ class Singulum {
     constructor(actions = {}, initialValues = {}) {
         setHidden(this, '$$actions', []);
         setHidden(this, '$$initialValues', {});
-        setHidden(this, '$$watcher', null);
+        setHidden(this, '$$watchers', []);
         setHidden(this, '$$snapshots', {});
         setHidden(this, '$$store', {});
 
@@ -343,8 +346,8 @@ Singulum.prototype = Object.create({
         /**
          * If there is a watcher, fire it
          */
-        if (isFunction(this.$$watcher)) {
-            this.$$watcher(this.store);
+        if (isFunction(this.$$watchers)) {
+            this.$$watchers(this.store);
         }
 
         return this;
@@ -384,8 +387,8 @@ Singulum.prototype = Object.create({
         /**
          * If there is a watcher, fire it
          */
-        if (isFunction(this.$$watcher)) {
-            this.$$watcher(this.store);
+        if (isFunction(this.$$watchers)) {
+            this.$$watchers(this.store);
         }
 
         return this;
@@ -402,18 +405,25 @@ Singulum.prototype = Object.create({
     },
 
     /**
-     * Clear out callback bound to $$watcher
+     * Clear out callback bound to $$watchers
      *
      * @returns {Singulum}
      */
-    unwatch() {
-        this.$$watcher = null;
+    unwatch(callback) {
+        const watcherIndex = findIndex(this.$$watchers, (watcher) => {
+            return watcher === callback;
+        });
+
+        this.$$watchers = [
+            ...this.$$watchers.slice(0, watcherIndex),
+            ...this.$$watchers.slice(watcherIndex + 1, this.$$watchers.length)
+        ];
 
         return this;
     },
 
     /**
-     * Add callback to $$watcher, to be fired whenever store updates
+     * Add callback to $$watchers, to be fired whenever store updates
      *
      * @param {Function} callback
      * @returns {Singulum}
@@ -423,7 +433,10 @@ Singulum.prototype = Object.create({
          * Make sure callback is actually a function before setting it
          */
         if (isFunction(callback)) {
-            this.$$watcher = callback;
+            this.$$watchers = [
+                ...this.$$watchers,
+                callback
+            ];
         }
 
         return this;

@@ -13,6 +13,14 @@ export const bindFunction = (fn, thisArg) => {
     };
 };
 
+export const findIndex = (array, callback) => {
+    for (let index = 0, length = array.length; index < length; index++) {
+        if (callback(array[index], index, array)) {
+            return index;
+        }
+    }
+};
+
 /**
  * Provided as faster alternative for native .forEach
  *
@@ -172,6 +180,7 @@ export const throwError = (error) => {
 
 export default {
     bindFunction,
+    findIndex,
     forEachObject,
     getClone,
     isArray,

@@ -1,6 +1,6 @@
 # singulum
 
-`singulum` is a state container and manager for your JavaScript application with a tiny footprint (2.1KB minified and gzipped), attempting to have an explicit and straightforward API while maintaining the best aspects of both [Flux](https://github.com/facebook/flux) and [Redux](https://github.com/reactjs/redux). If you are unfamiliar with the Flux principles there are countless tutorials out there, and if you are unfamiliar with Redux then there are some spectacular videos made by it's founder.
+`singulum` is a state container and manager for your JavaScript application with a tiny footprint (2.2KB minified and gzipped), attempting to have an explicit and straightforward API while maintaining the best aspects of both [Flux](https://github.com/facebook/flux) and [Redux](https://github.com/reactjs/redux). If you are unfamiliar with the Flux principles there are countless tutorials out there, and if you are unfamiliar with Redux then there are some spectacular videos made by it's founder.
 
 #### Why create Singulum?
 

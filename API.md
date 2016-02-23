@@ -2,36 +2,6 @@
 
 The API for Singulum is intentionally limited, leaving a great deal of flexibility while abstracting a lot of the tedious boilerplate code.
 
-#### .store
-*@returns {SingulumStore}*
-
-```
-import exampleBranch from 'branches/exampleBranch';
-
-class ExampleApp extends React.Component {
-    ...
-    state = exampleBranch.store;
-    ...
-}
-```
-
-A simple getter, returning a shallowly cloned and frozen `SingulumActions` object of the branch's store.
-
-#### .actions
-*@returns {SingulumActions}*
-
-```
-import exampleBranch from 'branches/exampleBranch';
-
-const exampleActions = exampleBranch.actions;
-
-class ExampleApp extends React.Component {
-    ...
-}
-```
-
-A simple getter, returning a shallowly cloned and frozen `SingulumStore` object of all actions in the branch.
-
 #### .branch(actions[, initialValues, displayName])
 *@param {Object} actions*
 
@@ -69,10 +39,40 @@ The crux of the functionality, as it creates the store (based on `initialValues`
 
 The cool thing is, because every branch is a `Singulum` itself, you can branch as deeply as you would like. This allows you to build a state tree that represents the data hierarchy of your application very easily.
 
-#### .pluck([key])
-*@param {string|Array} key*
+#### .store
+*@returns {SingulumStore}*
 
-*@returns {*}*
+```
+import exampleBranch from 'branches/exampleBranch';
+
+class ExampleApp extends React.Component {
+    ...
+    state = exampleBranch.store;
+    ...
+}
+```
+
+A simple getter, returning a shallowly cloned and frozen `SingulumActions` object of the branch's store.
+
+#### .actions
+*@returns {SingulumActions}*
+
+```
+import exampleBranch from 'branches/exampleBranch';
+
+const exampleActions = exampleBranch.actions;
+
+class ExampleApp extends React.Component {
+    ...
+}
+```
+
+A simple getter, returning a shallowly cloned and frozen `SingulumStore` object of all actions in the branch.
+
+#### .pluck([key])
+*@param {string|Array} key (optional, defaults to undefined)*
+
+*@returns {any}*
 
 ```
 const todos = appBranch.pluck('todos');
