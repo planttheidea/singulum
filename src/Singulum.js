@@ -13,7 +13,6 @@ import {
   throwError
 } from './utils';
 
-const OBJECT_ASSIGN = Object.assign;
 const OBJECT_FREEZE = Object.freeze;
 
 /**
@@ -169,7 +168,10 @@ class SingulumActions {
    * @returns {Object}
    */
   constructor(actions = {}) {
-    OBJECT_ASSIGN(this, actions);
+    forEachObject(actions, (value, key) => {
+      this[key] = value;
+    });
+
     OBJECT_FREEZE(this);
 
     return this;
