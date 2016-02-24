@@ -95,7 +95,7 @@ Redux helped with both of these concepts, as it removed Flux dispatchers in favo
 
 *That's great, so what's different about singulum?*
 
-`singulum` attempts to blend the two concepts into a more digestable solution. While Flux's separate declaration of actions and stores that need to be later bound creates boilerplate, the logical separation of actions and stores makes sense as a cause-effect relationship. While Redux set the stage for a more pure state manager, it can be difficult to understand the hierarchy of data in your state tree due to the "build many pebbles and combine them into a foundation" nature of combineReducers.
+`singulum` attempts to blend the two concepts into a more digestable solution. While Flux's separate declaration of actions and stores that need to be later bound creates boilerplate, the logical separation of actions and stores makes sense as a cause-effect relationship. While Redux set the stage for a more pure state manager, it can be difficult to understand the hierarchy of data in your state tree due to the "build many pebbles and combine them into a foundation" nature of combineReducers. Plus (subjectively) `switch` statements don't feel like an extensible paradigm.
 
 `singulum` allows for simple, unified declaration of actions and stores, but creates a logical separation of them when in use, and doesn't require any boilerplate binding code. Additionally, `singulum` allows for great control over granularity of your actions (either for the entire store or a specific property), with the declarative relationship being very explicit.
 
