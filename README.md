@@ -46,7 +46,7 @@ const initialValues = {
 export default singulum.branch(actions, initialValues, 'todosBranch');
 ```
 
-Actions are auto-bound to the store of the branch with which they are created, and whatever value is returned from those functions is then applied to the state. You can scope the actions to specific properties on the branch's store as well; in this case, our actions are specific to `todos`, so they are mapped automatically to the `todos` property on our store when the branch is created (no switch statement or merging of full state needed). Now, if you wanted to add a todo:
+Actions are automatically-bound to the branch's store, and whatever value is returned from those functions is then applied to the state. You can scope the actions to specific properties on the branch's store as well; in this case, our actions are specific to `todos`, so they are mapped automatically to the `todos` property on our store when the branch is created (no switch statement or merging of full state needed). Now, if you wanted to add a todo:
 
 ```
 import todosBranch from './todosBranch.js';
