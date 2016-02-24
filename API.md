@@ -2,12 +2,12 @@
 
 The API for `singulum` is intentionally limited, leaving a great deal of flexibility while abstracting a lot of the tedious boilerplate code.
 
-#### .branch(actions[, initialValues, displayName])
+#### .branch(actions[, initialValues = {}, displayName = 0])
 *@param {Object} actions*
 
-*@param {Object} initialValues (optional, defaults to {})*
+*@param {Object} initialValues (optional)*
 
-*@param {string} displayName (optional, defaults to numeric counter)*
+*@param {string} displayName (optional)*
 
 *@returns {Singulum}*
 
@@ -70,7 +70,7 @@ class ExampleApp extends React.Component {
 A simple getter, returning a shallowly cloned and frozen `SingulumStore` object of all actions in the branch.
 
 #### .pluck([key])
-*@param {string|Array} key (optional, defaults to undefined)*
+*@param {string|Array} key (optional)*
 
 *@returns {any}*
 
@@ -92,8 +92,8 @@ componentWillUnmount() {
 
 Resets the store for the branch to the values originally provided in its creation.
 
-#### .snapshot([snapshotBranches])
-*@param {boolean} snapshotBranches (optional, defaults to false)*
+#### .snapshot([snapshotBranches = false])
+*@param {boolean} snapshotBranches (optional)*
 
 *@returns {SingulumSnapshot}*
 
@@ -105,10 +105,10 @@ onCreateSnapshot() {
 
 Creates and returns a snapshot of the current store's values. If true is passed to the method, a snapshot is taken of all child branches as well.
 
-#### .restore(snapshot[, resetBranches])
+#### .restore(snapshot[, resetBranches = false])
 *@param {SingulumSnapshot} snapshot*
 
-*@param {boolean} resetBranches (optional, defaults to false)*
+*@param {boolean} resetBranches (optional)*
 
 *@returns {Singulum}*
 
