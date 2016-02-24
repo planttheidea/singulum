@@ -97,4 +97,4 @@ This is a rudimentary example obviously, but there is much more to see over in t
 
 #### Browser support
 
-There are no external dependencies of Singulum, however if you want to support IE9-11 then the ES2015 Promises polyfill will need to be provided, as it is not supported natively. Due to the lack of ES5 support for certain features (namely `Object.definePropety`), IE8 and below are not supported.
+There are no external dependencies of Singulum, so all modern browsers are supported. If you want to support IE9-11 then the [es6-promise polyfill](https://github.com/stefanpenner/es6-promise) (or equivalent) will need to be provided, as Promises are not supported natively in IE. Due to the lack of ES5 support for certain features (namely `Object.definePropety`), IE8 and below are not supported.
