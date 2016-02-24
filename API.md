@@ -1,6 +1,6 @@
 # singulum API
 
-The API for Singulum is intentionally limited, leaving a great deal of flexibility while abstracting a lot of the tedious boilerplate code.
+The API for `singulum` is intentionally limited, leaving a great deal of flexibility while abstracting a lot of the tedious boilerplate code.
 
 #### .branch(actions[, initialValues, displayName])
 *@param {Object} actions*
