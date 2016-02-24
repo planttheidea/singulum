@@ -21,20 +21,20 @@ class TodoApp extends React.Component {
     }
 
     onClickAddTodo = () => {
-        todosActions.addTodo(this.state.todos, this.refs.todoValue.value);
+        todosActions.addTodo(this.refs.todoValue.value);
 
         this.refs.todoValue.value = '';
     };
 
     onClickEditTodo = () => {
-        todosActions.editTodo(this.state.todos, this.refs.editId.value, this.refs.editValue.value);
+        todosActions.editTodo(this.refs.editId.value, this.refs.editValue.value);
 
         this.refs.editId.value = '';
         this.refs.editValue.value = '';
     };
 
     onClickRemoveTodo = () => {
-        todosActions.removeTodo(this.state.todos, this.refs.removeId.value);
+        todosActions.removeTodo(this.refs.removeId.value);
 
         this.refs.removeId.value = '';
     };

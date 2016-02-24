@@ -61,31 +61,31 @@ import todosBranch from './todosBranch.js';
 
 const todosActions = todosBranch.actions;
 
-const startingStore = todosBranch.store; // {todos: []}
+console.log(todosBranch.store); // {todos: []}
 
-todosActions.addTodo(todosBranch.store.todos, 'Learn Flux');
-todosActions.addTodo(todosBranch.store.todos, 'Learn Redux');
-todosActions.addTodo(todosBranch.store.todos, 'Apply Singulum');
+todosActions.addTodo('Do a little dance');
+todosActions.addTodo('Make a little love');
+todosActions.addTodo('Get down tonight');
 
 console.log(todosBranch.store);
 /*
     {
         [
-            {id: 0, value: 'Learn Flux'},
-            {id: 1, value: 'Learn Redux'},
-            {id: 2, value: 'Apply Singulum'}
+            {id: 0, value: 'Do a little dance'},
+            {id: 1, value: 'Make a little love'},
+            {id: 2, value: 'Get down tonight'}
         ]
     }
 */
 
-todosActions.removeTodo(todosBranch.store.todos, 1);
+todosActions.removeTodo(1);
 
 console.log(todosBranch.store);
 /*
     {
         [
-            {id: 0, value: 'Learn Flux'},
-            {id: 2, value: 'Apply Singulum'}
+            {id: 0, value: 'Do a little dance'},
+            {id: 2, value: 'Get down tonight'}
         ]
     }
 */
@@ -93,7 +93,7 @@ console.log(todosBranch.store);
 
 Boom, you're on your way. 
 
-This is a rudimentary example obviously, but there is much more to see over in the [API](API.md) section, including how to use more traditional reducers that are not scoped or how to easily bind it to the component lifecycle if you are using React.
+This is a rudimentary example obviously, but there is much more to see over in the [API](API.md) section, including how to use reducers for your entire store, as well as how to easily bind it to the component lifecycle if you are using React.
 
 #### Browser support
 

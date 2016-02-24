@@ -35,7 +35,7 @@ const initialValues = {
 export default singulum.branch(actions, initialValues, 'counterBranch');
 ```
 
-The crux of the functionality, as it creates the store (based on `initialValues`) and the actions (`actions`) that are bound either to the store as a whole or to a specific store property. `displayName` is an optional value that will provide a name to the store for easy identification. It returns a `Singulum` object that is a child on the tree from the root singulum object (which itself a `Singulum`).
+The crux of the functionality, as it creates the store (based on `initialValues`) and the actions (`actions`) that are bound either to the store as a whole or to a specific store property. `displayName` is an optional value that will provide a name to the store for easy identification. It returns a `Singulum` object that is a child on the tree from the root singulum object (which itself a `Singulum`). One thing to note is that the first parameter passed to any action is an injected value based on how the action maps to your store. This means if you map an action to a specific property on the store, that property is injected, else the entire store is injected. With the above action, you could simply call `branch.actions.setCounter('add')`, no need to pass the existing store object.
 
 The cool thing is, because every branch is a `Singulum` itself, you can branch as deeply as you would like. This allows you to build a state tree that represents the data hierarchy of your application very easily.
 

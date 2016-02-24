@@ -165,7 +165,7 @@ const firstTodoAdded = todos(emptyTodos, {
     value: 'First todo'
 });
 
-todosSingulum.actions.setTodo(emptyTodosStore, {
+todosSingulum.actions.setTodo({
     type: 'ADD_TODO',
     value: 'First todo'
 });
@@ -183,8 +183,8 @@ threeTodosAdded = todos(threeTodosAdded, {
     value: 'Last time'
 });
 
-todosSingulum.actions.addTodo(todosSingulum.store.todos, 'Another one');
-todosSingulum.actions.addTodo(todosSingulum.store.todos, 'Last time');
+todosSingulum.actions.addTodo('Another one');
+todosSingulum.actions.addTodo('Last time');
 
 expect(threeTodosAdded).toEqual(threeAdded);
 expect(todosSingulum.store.todos).toEqual(threeAdded);
@@ -194,7 +194,7 @@ const twoTodosRemaining = todos(threeTodosAdded, {
     type: 'REMOVE_TODO'
 });
 
-todosSingulum.actions.removeTodo(todosSingulum.store.todos, 1);
+todosSingulum.actions.removeTodo(1);
 
 expect(twoTodosRemaining).toEqual(twoRemaining);
 expect(todosSingulum.store.todos).toEqual(twoRemaining);
@@ -205,7 +205,7 @@ const editedTodos = todos(twoTodosRemaining, {
     value: 'Edited value'
 });
 
-todosSingulum.actions.editTodo(todosSingulum.store.todos, 2, 'Edited value');
+todosSingulum.actions.editTodo(2, 'Edited value');
 
 expect(editedTodos).toEqual(finalTodos);
 expect(todosSingulum.store.todos).toEqual(finalTodos);

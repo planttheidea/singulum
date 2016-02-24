@@ -37,11 +37,11 @@ const removeTodo = (todos = [], id) => {
 };
 
 const actions = {
-    todos: {
-        addTodo,
-        editTodo,
-        removeTodo
-    }
+  todos: {
+      addTodo,
+      editTodo,
+      removeTodo
+  }
 };
 
 const initialValues = {

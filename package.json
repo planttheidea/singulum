@@ -53,5 +53,5 @@
     "simple-todos": "NODE_ENV=development ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --progress --colors --config=webpack.config.simpleTodos.js",
     "todos-app": "NODE_ENV=development ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --progress --colors --config=webpack.config.TodosApp.js"
   },
-  "version": "0.5.3"
+  "version": "0.6.0"
 }
