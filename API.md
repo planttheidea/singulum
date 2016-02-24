@@ -15,16 +15,18 @@ The API for `singulum` is intentionally limited, leaving a great deal of flexibi
 import singulum from 'singulum';
 
 const actions = {
-    setCounter(counter = 0, action) {
-        if (action === 'add') {
-            return counter + 1;
+    counter: {
+        setCounter(counter = 0, action) {
+            if (action === 'add') {
+                return counter + 1;
+            }
+            
+            if (action === 'subtract') {
+                return counter - 1;
+            }
+            
+            return counter;
         }
-        
-        if (action === 'subtract') {
-            return counter - 1;
-        }
-        
-        return counter;
     }
 };
 
@@ -52,7 +54,7 @@ class ExampleApp extends React.Component {
 }
 ```
 
-A simple getter, returning a shallowly cloned and frozen `SingulumActions` object of the branch's store.
+A simple getter, returning a shallowly cloned and frozen `SingulumStore` object of all actions in the branch.
 
 #### .actions
 *@returns {SingulumActions}*
@@ -67,7 +69,7 @@ class ExampleApp extends React.Component {
 }
 ```
 
-A simple getter, returning a shallowly cloned and frozen `SingulumStore` object of all actions in the branch.
+A simple getter, returning a shallowly cloned and frozen `SingulumActions` object of the branch's store.
 
 #### .pluck([key])
 *@param {string|Array} key (optional)*
