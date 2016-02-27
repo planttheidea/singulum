@@ -16,6 +16,10 @@ class TodoApp extends React.Component {
         todosBranch.watch(this.onStoreChange);
     }
 
+    shouldComponentUpdate() {
+      return !todosBranch.equals(this.state);
+    }
+
     componentWillUnmount() {
         todosBranch.unwatch(this.onStoreChange);
     }

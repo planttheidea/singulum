@@ -71,14 +71,51 @@ class ExampleApp extends React.Component {
 
 A simple getter, returning a shallowly cloned and frozen `SingulumActions` object of the branch's store.
 
+#### .equals(object[, key])
+*@param {any} object*
+
+*@param {string} key (optional)*
+
+*@returns {boolean}*
+
+```
+shouldComponentUpdate(nextProps, nextState) {
+    return !exampleBranch.equals(nextState);
+}
+```
+
+Performs deep value equality check of *object* to store based on hashCode. If key is passed, equality comparison is performed on that key in the store rather than the entire store.
+
+#### .hashCode([key])
+*@param {string} key (optional)*
+
+*@returns {number}*
+
+```
+import exampleBranch from 'branches/exampleBranch';
+
+const initialHashCode = exampleBranch.hashCode();
+
+class ExampleApp extends React.Component {
+    ...
+    componentDidUpdate() {
+        if (exampleBranch.hashCode() === initialHashCode) {
+            console.log('returned to original state');
+        }
+    }
+}
+```
+
+Exposes hashCode of store used in equality checks. If key is passed, provides hashCode for that key in the store only.
+
 #### .pluck([key])
 *@param {string|Array} key (optional)*
 
 *@returns {any}*
 
 ```
-const todos = appBranch.pluck('todos');
-const user = appBranch.pluck(['userName', 'userId']);
+const todos = exampleBranch.pluck('todos');
+const user = exampleBranch.pluck(['userName', 'userId']);
 ```
 
 Retrieves a specific key in the store. Due to the cloned and frozen nature of the store, `branch.pluck('example')` is much more efficient than `branch.store.example`. If an array is passed, then an array of values is returned.
@@ -88,7 +125,7 @@ Retrieves a specific key in the store. Due to the cloned and frozen nature of th
 
 ```
 componentWillUnmount() {
-    homeBranch.reset();
+    exampleBranch.reset();
 }
 ```
 
@@ -101,7 +138,7 @@ Resets the store for the branch to the values originally provided in its creatio
 
 ```
 onCreateSnapshot() {
-   this.currentSnapshot = appBranch.snapshot(true); 
+   this.currentSnapshot = exampleBranch.snapshot(true); 
 }
 ```
 
@@ -116,7 +153,7 @@ Creates and returns a snapshot of the current store's values. If true is passed 
 
 ```
 componentDidMount() {
-    clientSideApp.restore(serverSideSnapshot, true);
+    exampleBranch.restore(serverSideSnapshot, true);
 }
 ```
 
@@ -129,7 +166,7 @@ Restores the branch's store to its state when the snapshot was taken (see .snaps
 
 ```
 componentDidMount() {
-    appBranch.watch(this.onStoreChange);
+    exampleBranch.watch(this.onStoreChange);
 }
 
 onStoreChange = (store) => {
@@ -144,7 +181,7 @@ Adds listener callback to be fired upon an update to that branch's store.
 
 ```
 componentWillUnmount() {
-    appBranch.unwatch(this.onStoreChange);
+    exampleBranch.unwatch(this.onStoreChange);
 }
 ```
 

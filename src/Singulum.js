@@ -3,7 +3,9 @@ import {
   findIndex,
   forEachObject,
   getClone,
+  hashCode,
   isArray,
+  isEqual,
   isFunction,
   isInstanceOf,
   isObject,
@@ -21,9 +23,13 @@ const OBJECT_FREEZE = Object.freeze;
  */
 let namespaceIncrementer = 0;
 
-const fireWatchers = (object) => {
-  object.$$watchers.forEach((watcher) => {
-    watcher(object.store);
+/**
+ *
+ * @param {Singulum} singulum
+ */
+const fireWatchers = (singulum) => {
+  singulum.$$watchers.forEach((watcher) => {
+    watcher(singulum.store);
   });
 };
 
@@ -31,25 +37,25 @@ const fireWatchers = (object) => {
  * Assigns new result to store, fires listener with new SingulumStore, and returns
  * Promise with new result
  *
- * @param {Object} object
+ * @param {Singulum} singulum
  * @param {string} key
  * @param {*} result
  * @returns {Promise}
  */
-const updateStoreValue = (object, result, key) => {
+const updateStoreValue = (singulum, result, key) => {
   /**
    * Apply new result value to the store, scoped if the key is provided
    */
   if (key) {
-    object.$$store[key] = result;
+    singulum.$$store[key] = result;
   } else {
-    object.$$store = result;
+    singulum.$$store = result;
   }
 
   /**
    * If there is a watcher, fire it
    */
-  fireWatchers(object);
+  fireWatchers(singulum);
 
   return result;
 };
@@ -58,17 +64,17 @@ const updateStoreValue = (object, result, key) => {
  * Creates bound and wrapped function to store new value internally and invoke listener
  * If function is asyncronous, it waits for the promise to be resolved before firing
  *
- * @param {Object} thisArg
+ * @param {Singulum} singulum
  * @param {Function} fn
  * @param {string} key
  * @return {Function}
  */
-const createWrapperFunction = (thisArg, fn, key) => {
+const createWrapperFunction = (singulum, fn, key) => {
   /**
    * @note must be a standard function instead of an arrow function, to allow the this binding
    */
   return bindFunction(function (...args) {
-    const primaryArgument = key ? thisArg.$$store[key] : thisArg.$$store;
+    const primaryArgument = key ? singulum.$$store[key] : singulum.$$store;
     const result = fn(primaryArgument, ...args);
 
     /**
@@ -84,19 +90,19 @@ const createWrapperFunction = (thisArg, fn, key) => {
      * Otherwise, wrap the return data in a native Promise and return it
      */
     return Promise.resolve(updateStoreValue(this, result, key));
-  }, thisArg);
+  }, singulum);
 };
 
 /**
  * Creates namespaced Singulum within the object, aka make a branch
  *
- * @param {Object} object
+ * @param {Singulum} singulum
  * @param {string} namespace
  * @param {Object} actions
  * @param {Object} initialValues
  * @returns {Object}
  */
-const createNewSingulumNamespace = (object, namespace, actions = {}, initialValues = {}) => {
+const createNewSingulumNamespace = (singulum, namespace, actions = {}, initialValues = {}) => {
   /**
    * if no namespace is provided, use the simple counter to create a unique entry
    */
@@ -105,28 +111,28 @@ const createNewSingulumNamespace = (object, namespace, actions = {}, initialValu
     namespaceIncrementer++;
   }
 
-  setReadonly(object, namespace, new Singulum(actions, initialValues));
+  setReadonly(singulum, namespace, new Singulum(actions, initialValues));
 
-  object.$$store[namespace] = object[namespace];
+  singulum.$$store[namespace] = singulum[namespace];
 
-  return object[namespace];
+  return singulum[namespace];
 };
 
 /**
  * Creates new item in the store, and creates related action with wrapper
  *
- * @param {Object} branch
+ * @param {Singulum} singulum
  * @param {Object} actions
  * @param {Object} initialValues
  */
-const createNewSingulumLeaves = (branch, actions = {}, initialValues = {}) => {
+const createNewSingulumLeaves = (singulum, actions = {}, initialValues = {}) => {
   forEachObject(initialValues, (initialValue, storeKey) => {
     /**
      * Create separate clones for initialValues and store, so that references between
      * the two do not exist
      */
-    branch.$$initialValues[storeKey] = getClone(initialValue, SingulumStore);
-    branch.$$store[storeKey] = getClone(initialValue, SingulumStore);
+    singulum.$$initialValues[storeKey] = getClone(initialValue, SingulumStore);
+    singulum.$$store[storeKey] = getClone(initialValue, SingulumStore);
   });
 
   forEachObject(actions, (action, actionKey) => {
@@ -134,13 +140,13 @@ const createNewSingulumLeaves = (branch, actions = {}, initialValues = {}) => {
      * if action is a function, then it applies to the entire state
      */
     if (isFunction(action)) {
-      branch.$$actions[actionKey] = createWrapperFunction(branch, action);
+      singulum.$$actions[actionKey] = createWrapperFunction(singulum, action);
     } else if (isObject(action)) {
       /**
        * if action is a map of functions, it applies to a specific key on the store
        */
       forEachObject(action, (actionFn, actionFnKey) => {
-        branch.$$actions[actionFnKey] = createWrapperFunction(branch, actionFn, actionKey);
+        singulum.$$actions[actionFnKey] = createWrapperFunction(singulum, actionFn, actionKey);
       });
     }
   });
@@ -149,12 +155,12 @@ const createNewSingulumLeaves = (branch, actions = {}, initialValues = {}) => {
 /**
  * Gets clone of value from branch store based on key
  *
- * @param {Object} branch
+ * @param {Singulum} singulum
  * @param {string} key
  * @returns {*}
  */
-const getLeaf = (branch, key) => {
-  return getClone(branch.$$store[key], SingulumStore);
+const getLeaf = (singulum, key) => {
+  return getClone(singulum.$$store[key], SingulumStore);
 };
 
 /**
@@ -247,14 +253,7 @@ class Singulum {
 
     return this;
   }
-}
 
-/**
- * prototype of Singulum class
- *
- * @type {Object}
- */
-Singulum.prototype = Object.create({
   /**
    * Get immutable version of actions
    *
@@ -262,7 +261,7 @@ Singulum.prototype = Object.create({
    */
   get actions() {
     return new SingulumActions(this.$$actions);
-  },
+  }
 
   /**
    * Get immutable version of store
@@ -271,7 +270,7 @@ Singulum.prototype = Object.create({
    */
   get store() {
     return new SingulumStore(this.$$store);
-  },
+  }
 
   /**
    * Create namespaced Singulum child
@@ -290,7 +289,31 @@ Singulum.prototype = Object.create({
     }
 
     return createNewSingulumNamespace(this, namespace, actions, initialValues);
-  },
+  }
+
+  /**
+   * Determine if object passed is equal in value to the branch
+   * If key is passed, performs value equality check on branch[key] only
+   *
+   * @param {*} object
+   * @param {string} key
+   * @returns {*}
+   */
+  equals(object, key) {
+    if (key) {
+      return isEqual(this.$$store[key], object[key]);
+    }
+
+    return isEqual(this.$$store, object);
+  }
+
+  hashCode(key) {
+    if (key) {
+      return hashCode(this.$$store[key]);
+    }
+
+    return hashCode(this.$$store);
+  }
 
   /**
    * Based on key or array of keys, returns values in store associated
@@ -323,7 +346,7 @@ Singulum.prototype = Object.create({
         return getLeaf(this, leaf);
       });
     }
-  },
+  }
 
   /**
    * Return singulum to its original state
@@ -357,7 +380,7 @@ Singulum.prototype = Object.create({
     fireWatchers(this);
 
     return this;
-  },
+  }
 
   /**
    * Restore values in store based on snapshot, optionally restored deeply
@@ -396,7 +419,7 @@ Singulum.prototype = Object.create({
     fireWatchers(this);
 
     return this;
-  },
+  }
 
   /**
    * Create snapshot of current store state, optionally snapshot deeply
@@ -406,7 +429,7 @@ Singulum.prototype = Object.create({
    */
   snapshot(snapshotBranches = false) {
     return new SingulumSnapshot(this.store, this.$$store, snapshotBranches);
-  },
+  }
 
   /**
    * Clear out callback bound to $$watchers
@@ -424,7 +447,7 @@ Singulum.prototype = Object.create({
     ];
 
     return this;
-  },
+  }
 
   /**
    * Add callback to $$watchers, to be fired whenever store updates
@@ -445,6 +468,6 @@ Singulum.prototype = Object.create({
 
     return this;
   }
-});
+}
 
 export default Singulum;
