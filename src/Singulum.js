@@ -326,7 +326,7 @@ class Singulum {
    */
   equals(object, key) {
     if (key) {
-      return isEqual(this.$$store[key], object[key]);
+      return isEqual(this.$$store[key], object);
     }
 
     return isEqual(this.$$store, object);
