@@ -118,6 +118,16 @@ export const isArray = (object) => {
 };
 
 /**
+ * Determines if object is an instance of a class
+ *
+ * @param {*} object
+ * @returns {boolean}
+ */
+export const isClassInstance = (object) => {
+  return isObject(object) && Object.getPrototypeOf(object).constructor !== Object.prototype.constructor;
+};
+
+/**
  * Determines if object is of type Date
  * Not exported because not used elsewhere
  *
@@ -254,6 +264,7 @@ export default {
   getClone,
   hashCode,
   isArray,
+  isClassInstance,
   isEqual,
   isFunction,
   isInstanceOf,

@@ -5,6 +5,7 @@ import {
   getClone,
   hashCode,
   isArray,
+  isClassInstance,
   isEqual,
   isFunction,
   isInstanceOf,
@@ -22,76 +23,6 @@ const OBJECT_FREEZE = Object.freeze;
  * a branch
  */
 let namespaceIncrementer = 0;
-
-/**
- *
- * @param {Singulum} singulum
- */
-const fireWatchers = (singulum) => {
-  singulum.$$watchers.forEach((watcher) => {
-    watcher(singulum.store);
-  });
-};
-
-/**
- * Assigns new result to store, fires listener with new SingulumStore, and returns
- * Promise with new result
- *
- * @param {Singulum} singulum
- * @param {string} key
- * @param {*} result
- * @returns {Promise}
- */
-const updateStoreValue = (singulum, result, key) => {
-  /**
-   * Apply new result value to the store, scoped if the key is provided
-   */
-  if (key) {
-    singulum.$$store[key] = result;
-  } else {
-    singulum.$$store = result;
-  }
-
-  /**
-   * If there is a watcher, fire it
-   */
-  fireWatchers(singulum);
-
-  return result;
-};
-
-/**
- * Creates bound and wrapped function to store new value internally and invoke listener
- * If function is asyncronous, it waits for the promise to be resolved before firing
- *
- * @param {Singulum} singulum
- * @param {Function} fn
- * @param {string} key
- * @return {Function}
- */
-const createWrapperFunction = (singulum, fn, key) => {
-  /**
-   * @note must be a standard function instead of an arrow function, to allow the this binding
-   */
-  return bindFunction(function (...args) {
-    const primaryArgument = key ? singulum.$$store[key] : singulum.$$store;
-    const result = fn(primaryArgument, ...args);
-
-    /**
-     * If the result is a Promise, wait for resolution and then return the data
-     */
-    if (isFunction(result.then)) {
-      return result.then((resultValue) => {
-        return updateStoreValue(this, resultValue, key);
-      });
-    }
-
-    /**
-     * Otherwise, wrap the return data in a native Promise and return it
-     */
-    return Promise.resolve(updateStoreValue(this, result, key));
-  }, singulum);
-};
 
 /**
  * Creates namespaced Singulum within the object, aka make a branch
@@ -131,8 +62,8 @@ const createNewSingulumLeaves = (singulum, actions = {}, initialValues = {}) => 
      * Create separate clones for initialValues and store, so that references between
      * the two do not exist
      */
-    singulum.$$initialValues[storeKey] = getClone(initialValue, SingulumStore);
-    singulum.$$store[storeKey] = getClone(initialValue, SingulumStore);
+    singulum.$$initialValues[storeKey] = initialValue;
+    singulum.$$store[storeKey] = getFreshValueClone(initialValue);
   });
 
   forEachObject(actions, (action, actionKey) => {
@@ -153,6 +84,73 @@ const createNewSingulumLeaves = (singulum, actions = {}, initialValues = {}) => 
 };
 
 /**
+ * Creates bound and wrapped function to store new value internally and invoke listener
+ * If function is asyncronous, it waits for the promise to be resolved before firing
+ *
+ * @param {Singulum} singulum
+ * @param {Function} fn
+ * @param {string} key
+ * @return {Function}
+ */
+const createWrapperFunction = (singulum, fn, key) => {
+  /**
+   * @note must be a standard function instead of an arrow function, to allow the this binding
+   */
+  return bindFunction(function (...args) {
+    const primaryArgument = key ? singulum.$$store[key] : singulum.$$store;
+    const result = fn(primaryArgument, ...args);
+
+    /**
+     * If the result is a Promise, wait for resolution and then return the data
+     */
+    if (isFunction(result.then)) {
+      return result.then((resultValue) => {
+        return updateStoreValue(this, resultValue, key);
+      });
+    }
+
+    /**
+     * Otherwise, wrap the return data in a native Promise and return it
+     */
+    return Promise.resolve(updateStoreValue(this, result, key));
+  }, singulum);
+};
+
+/**
+ *
+ * @param {Singulum} singulum
+ */
+const fireWatchers = (singulum) => {
+  singulum.$$watchers.forEach((watcher) => {
+    watcher(singulum.store);
+  });
+};
+
+/**
+ * If the value is a class, return a cloned version of that class including prototype,
+ * else return value clone of object
+ *
+ * @param {*} value
+ * @returns {*}
+ */
+const getFreshValueClone = (value) => {
+  const isValueInstance = isClassInstance(value);
+
+  if (isValueInstance) {
+    return Object.create(
+      Object.getPrototypeOf(value),
+      Object.getOwnPropertyNames(value).reduce((previous, current) => {
+        previous[current] = Object.getOwnPropertyDescriptor(value, current);
+
+        return previous;
+      }, {})
+    );
+  }
+
+  return getClone(value, SingulumStore);
+};
+
+/**
  * Gets clone of value from branch store based on key
  *
  * @param {Singulum} singulum
@@ -161,6 +159,33 @@ const createNewSingulumLeaves = (singulum, actions = {}, initialValues = {}) => 
  */
 const getLeaf = (singulum, key) => {
   return getClone(singulum.$$store[key], SingulumStore);
+};
+
+/**
+ * Assigns new result to store, fires listener with new SingulumStore, and returns
+ * Promise with new result
+ *
+ * @param {Singulum} singulum
+ * @param {string} key
+ * @param {*} result
+ * @returns {Promise}
+ */
+const updateStoreValue = (singulum, result, key) => {
+  /**
+   * Apply new result value to the store, scoped if the key is provided
+   */
+  if (key) {
+    singulum.$$store[key] = result;
+  } else {
+    singulum.$$store = result;
+  }
+
+  /**
+   * If there is a watcher, fire it
+   */
+  fireWatchers(singulum);
+
+  return result;
 };
 
 /**
