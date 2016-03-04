@@ -3,15 +3,17 @@ import {
   findIndex,
   forEachObject,
   getClone,
+  getMutableObject,
   hashCode,
-  isArray,
   isClassInstance,
   isEqual,
   isFunction,
   isInstanceOf,
   isObject,
+  isProduction,
   isString,
   setHidden,
+  setImmutable,
   setReadonly,
   throwError
 } from './utils';
@@ -151,17 +153,6 @@ const getFreshValueClone = (value) => {
 };
 
 /**
- * Gets clone of value from branch store based on key
- *
- * @param {Singulum} singulum
- * @param {string} key
- * @returns {*}
- */
-const getLeaf = (singulum, key) => {
-  return getClone(singulum.$$store[key], SingulumStore);
-};
-
-/**
  * Assigns new result to store, fires listener with new SingulumStore, and returns
  * Promise with new result
  *
@@ -180,6 +171,8 @@ const updateStoreValue = (singulum, result, key) => {
     singulum.$$store = result;
   }
 
+  singulum.store = new SingulumStore(singulum.$$store);
+
   /**
    * If there is a watcher, fire it
    */
@@ -193,28 +186,42 @@ const updateStoreValue = (singulum, result, key) => {
  */
 class SingulumActions {
   /**
-   * Create shallowly cloned and frozen object of internal actions, and freeze
+   * Create immutable and frozen object of internal actions
    *
    * @param {Object} actions
    * @returns {Object}
    */
   constructor(actions = {}) {
     forEachObject(actions, (value, key) => {
-      this[key] = value;
+      setImmutable(this, key, actions[key]);
     });
 
     OBJECT_FREEZE(this);
 
     return this;
   }
+
+  log() {
+    if (console) {
+      console.log(getMutableObject(this));
+    }
+  }
 }
+
+const setStoreAccessValue = (store) => {
+  if (isProduction()) {
+    return store;
+  }
+
+  return new SingulumStore(store);
+};
 
 /**
  * Store class provided with [branchName].store
  */
 class SingulumStore {
   /**
-   * Create shallowly cloned and frozen object of store, including stores
+   * Create immutable and frozen object of store
    * branched from it
    *
    * @param {Object} store
@@ -222,12 +229,18 @@ class SingulumStore {
    */
   constructor(store = {}) {
     forEachObject(store, (value, key) => {
-      this[key] = isInstanceOf(value, Singulum) ? value.store : value;
+      setImmutable(this, key, isInstanceOf(value, Singulum) ? value.store : value);
     });
 
     OBJECT_FREEZE(this);
 
     return this;
+  }
+
+  log() {
+    if (console) {
+      console.log(getMutableObject(this));
+    }
   }
 }
 
@@ -276,25 +289,10 @@ class Singulum {
 
     createNewSingulumLeaves(this, actions, initialValues);
 
+    this.actions = isProduction() ? this.$$actions : new SingulumActions(this.$$actions);
+    this.store = setStoreAccessValue(this.$$store);
+
     return this;
-  }
-
-  /**
-   * Get immutable version of actions
-   *
-   * @returns {SingulumActions}
-   */
-  get actions() {
-    return new SingulumActions(this.$$actions);
-  }
-
-  /**
-   * Get immutable version of store
-   *
-   * @returns {SingulumStore}
-   */
-  get store() {
-    return new SingulumStore(this.$$store);
   }
 
   /**
@@ -341,39 +339,6 @@ class Singulum {
   }
 
   /**
-   * Based on key or array of keys, returns values in store associated
-   * If leaves is an array, an array of values in the same order as keys passed
-   * is returned
-   *
-   * @param {string|Array} leaves
-   * @returns {*}
-   */
-  pluck(leaves) {
-    /**
-     * if nothing is passed, just return the store
-     */
-    if (!leaves) {
-      return this.store;
-    }
-
-    /**
-     * if its a single key, get the leaf
-     */
-    if (isString(leaves)) {
-      return getLeaf(this, leaves);
-    }
-
-    /**
-     * if its an array of keys, get all the leaves
-     */
-    if (isArray(leaves)) {
-      return leaves.map((leaf) => {
-        return getLeaf(this, leaf);
-      });
-    }
-  }
-
-  /**
    * Return singulum to its original state
    *
    * @param {boolean} resetBranches
@@ -398,6 +363,7 @@ class Singulum {
     });
 
     this.$$store = newStore;
+    this.store = setStoreAccessValue(this.$$store);
 
     /**
      * If there is a watcher, fire it
@@ -437,6 +403,8 @@ class Singulum {
         this.$$store[key] = value;
       }
     });
+
+    this.store = setStoreAccessValue(this.$$store);
 
     /**
      * If there is a watcher, fire it

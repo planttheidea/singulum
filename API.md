@@ -54,7 +54,13 @@ class ExampleApp extends React.Component {
 }
 ```
 
-A simple getter, returning a shallowly cloned and frozen `SingulumStore` object of all actions in the branch.
+Returns an immutable and shallowly-frozen `SingulumStore` object of the branch's store. 
+
+All items (including sub-keys or sub-indexes on nested objects) within the store will be getters-only to prevent state from being set outside of your actions. This is obviously to your benefit, however it adds some noise to the object in the console if you want to see it in the console. As such, a convenience method has been added to see the object in it's normal form:
+ 
+```
+exampleBranch.store.log();
+```
 
 #### .actions
 *@returns {SingulumActions}*
@@ -69,7 +75,13 @@ class ExampleApp extends React.Component {
 }
 ```
 
-A simple getter, returning a shallowly cloned and frozen `SingulumActions` object of the branch's store.
+Returns an immutable and shallowly-frozen `SingulumActions` object of the branch's actions.
+
+Just like `.store`, `.actions` has a logger built-in:
+
+```
+exampleBranch.actions.log();
+```
 
 #### .equals(object[, key])
 *@param {any} object*
@@ -107,18 +119,6 @@ class ExampleApp extends React.Component {
 ```
 
 Exposes hashCode of store used in equality checks. If key is passed, provides hashCode for that key in the store only.
-
-#### .pluck([key])
-*@param {string|Array} key (optional)*
-
-*@returns {any}*
-
-```
-const todos = exampleBranch.pluck('todos');
-const user = exampleBranch.pluck(['userName', 'userId']);
-```
-
-Retrieves a specific key in the store. Due to the cloned and frozen nature of the store, `branch.pluck('example')` is much more efficient than `branch.store.example`. If an array is passed, then an array of values is returned.
 
 #### .reset()
 *@returns {Singulum}*

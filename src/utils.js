@@ -1,3 +1,5 @@
+const DEFINE_PROPERTY = Object.defineProperty;
+const GET_OWN_PROPERTY_NAMES = Object.getOwnPropertyNames;
 const TO_STRING = Object.prototype.toString;
 
 /**
@@ -82,6 +84,24 @@ export const getClone = (object, SingulumStore) => {
   return object;
 };
 
+export const getMutableObject = (object) => {
+  const isObjectArray = isArray(object);
+
+  let mutableObject = isObjectArray ? [] : {};
+
+  if (isObjectArray) {
+    object.forEach((item, itemIndex) => {
+      setMutableProperty(object, itemIndex, mutableObject);
+    });
+  } else {
+    forEachObject(object, (value, property) => {
+      setMutableProperty(object, property, mutableObject);
+    });
+  }
+
+  return mutableObject;
+};
+
 /**
  * Build integer hashCode from object
  *
@@ -134,7 +154,7 @@ export const isClassInstance = (object) => {
  * @param {*} object
  * @returns {boolean}
  */
-const isDate = (object) => {
+export const isDate = (object) => {
   return TO_STRING.call(object) === '[object Date]';
 };
 
@@ -180,6 +200,10 @@ export const isObject = (object) => {
   return TO_STRING.call(object) === '[object Object]' && !!object;
 };
 
+export const isProduction = () => {
+  return __ENVIRONMENT__ === 'production';
+};
+
 /**
  * Determines if object is of type String
  *
@@ -198,7 +222,7 @@ export const isString = (object) => {
  * @param {*} value
  */
 export const setHidden = (object, property, value) => {
-  Object.defineProperty(object, property, {
+  DEFINE_PROPERTY(object, property, {
     configurable: true,
     enumerable: false,
     value,
@@ -230,6 +254,81 @@ const serialize = (object) => {
   return serializedCode.replace(/\s/g, '');
 };
 
+const setMutableProperty = (object, property, targetObject) => {
+  const descriptor = Object.getOwnPropertyDescriptor(object, property) || {};
+
+  let value = object[property];
+
+  if (isArray(value) || isObject(value)) {
+    value = getMutableObject(value);
+  }
+
+  DEFINE_PROPERTY(targetObject, property, {
+    configurable: true,
+    enumerable: descriptor.enumerable || true,
+    value,
+    writable: true
+  });
+};
+
+export const setImmutable = (object, property, value, descriptor = {}) => {
+  let realValue;
+
+  switch (true) {
+    case isArray(value):
+      realValue = [];
+
+      value.forEach((valueItem, valueItemIndex) => {
+        setImmutable(realValue, valueItemIndex, valueItem);
+      });
+
+      break;
+
+    case isObject(value):
+      realValue = {};
+
+      GET_OWN_PROPERTY_NAMES(value).forEach((valueItemKey) => {
+        setImmutable(realValue, valueItemKey, value[valueItemKey]);
+      });
+
+      break;
+
+    case isDate(value):
+      realValue = value.valueOf();
+      break;
+
+    case isFunction(value):
+      realValue = function (...args) {
+        return value.apply(this, args);
+      };
+
+      forEachObject(value, (item, key) => {
+        if (value.hasOwnProperty(key)) {
+          setImmutable(realValue, key, item);
+        }
+      });
+
+      break;
+
+    default:
+      realValue = value;
+      break;
+  }
+
+  DEFINE_PROPERTY(object, property, {
+    get() {
+      return realValue;
+    },
+    set() {
+      throw new SyntaxError(`You are trying to set a value on an immutable object which is not allowed. Check the assignment of property ${property}.`);
+    },
+    configurable: false,
+    enumerable: descriptor.enumerable || true
+  });
+
+  return object[property];
+};
+
 /**
  * Set property on object as getter only, making it immutable
  *
@@ -238,7 +337,7 @@ const serialize = (object) => {
  * @param {*} value
  */
 export const setReadonly = (object, property, value) => {
-  Object.defineProperty(object, property, {
+  DEFINE_PROPERTY(object, property, {
     get() {
       return value;
     },
@@ -262,15 +361,19 @@ export default {
   findIndex,
   forEachObject,
   getClone,
+  getMutableObject,
   hashCode,
   isArray,
   isClassInstance,
+  isDate,
   isEqual,
   isFunction,
   isInstanceOf,
   isObject,
+  isProduction,
   isString,
   setHidden,
+  setImmutable,
   setReadonly,
   throwError
 };

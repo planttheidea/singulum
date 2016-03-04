@@ -6,121 +6,163 @@ import todosBranch from './branches/todosBranch';
 const todosActions = todosBranch.actions;
 
 class TodoApp extends React.Component {
-    constructor(props) {
-        super(props);
-    }
+  constructor(props) {
+    super(props);
+  }
 
-    state = todosBranch.store;
+  state = todosBranch.store;
 
-    componentDidMount() {
-        todosBranch.watch(this.onStoreChange);
-    }
+  componentDidMount() {
+    todosBranch.watch(this.onStoreChange);
+  }
 
-    shouldComponentUpdate() {
-      return !todosBranch.equals(this.state);
-    }
+  shouldComponentUpdate() {
+    return !todosBranch.equals(this.state);
+  }
 
-    componentWillUnmount() {
-        todosBranch.unwatch(this.onStoreChange);
-    }
+  componentWillUnmount() {
+    todosBranch.unwatch(this.onStoreChange);
+  }
 
-    onClickAddTodo = () => {
-        todosActions.addTodo(this.refs.todoValue.value);
+  onClickAddTodo = () => {
+    todosActions.addTodo(this.refs.todoValue.value);
 
-        this.refs.todoValue.value = '';
-    };
+    this.refs.todoValue.value = '';
+  };
 
-    onClickEditTodo = () => {
-        todosActions.editTodo(this.refs.editId.value, this.refs.editValue.value);
+  onClickEditTodo = () => {
+    todosActions.editTodo(this.refs.editId.value, this.refs.editValue.value);
 
-        this.refs.editId.value = '';
-        this.refs.editValue.value = '';
-    };
+    this.refs.editId.value = '';
+    this.refs.editValue.value = '';
+  };
 
-    onClickRemoveTodo = () => {
-        todosActions.removeTodo(this.refs.removeId.value);
+  onClickRemoveTodo = () => {
+    todosActions.removeTodo(this.refs.removeId.value);
 
-        this.refs.removeId.value = '';
-    };
+    this.refs.removeId.value = '';
+  };
 
-    onStoreChange = (store) => {
-        this.setState(store);
-    };
+  onClickReset = () => {
+    todosBranch.reset();
 
-    render() {
-        return (
-            <div>
-                <input
-                    ref="todoValue"
-                    type="text"
-                />
+    this.setState(todosBranch.store);
+  };
 
-                <button
-                    onClick={this.onClickAddTodo}
-                    ref="addTodo"
-                    type="button"
-                >
-                    Add todo
-                </button>
+  onClickRestore = () => {
+    todosBranch.restore(this.snapshot);
 
-                <br/>
+    this.setState(todosBranch.store);
+  };
 
-                <input
-                    placeholder="ID"
-                    ref="removeId"
-                    type="number"
-                />
+  onClickSnapshot = () => {
+    this.snapshot = todosBranch.snapshot();
+  };
 
-                <button
-                    onClick={this.onClickRemoveTodo}
-                    ref="removeTodo"
-                    type="button"
-                >
-                    Remove todo
-                </button>
+  onStoreChange = (store) => {
+    this.setState(store);
+  };
 
-                <br/>
+  render() {
+    return (
+      <div>
+        <div>
+          <button
+            onClick={this.onClickSnapshot}
+            ref="snapshot"
+            type="button"
+          >
+            Snapshot
+          </button>
 
-                <input
-                    placeholder="ID"
-                    ref="editId"
-                    type="number"
-                />
+          <button
+            onClick={this.onClickReset}
+            ref="reset"
+            type="button"
+          >
+            Reset
+          </button>
 
-                <input
-                    placeholder="New value"
-                    ref="editValue"
-                    type="text"
-                />
+          <button
+            onClick={this.onClickRestore}
+            ref="restore"
+            type="button"
+          >
+            Restore
+          </button>
+        </div>
 
-                <button
-                    onClick={this.onClickEditTodo}
-                    ref="editTodo"
-                    type="button"
-                >
-                    Edit todo
-                </button>
+        <input
+          ref="todoValue"
+          type="text"
+        />
 
-                {!!this.state.todos.length && (
-                    <ul>
-                        {this.state.todos.map((todo, index) => {
-                            return (
-                                <li key={`todo-${index}`}>
-                                    <div>
-                                        ID: {todo.id}
-                                    </div>
+        <button
+          onClick={this.onClickAddTodo}
+          ref="addTodo"
+          type="button"
+        >
+          Add todo
+        </button>
 
-                                    <div>
-                                        Value: {todo.value}
-                                    </div>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                )}
-            </div>
-        );
-    }
+        <br/>
+
+        <input
+          placeholder="ID"
+          ref="removeId"
+          type="number"
+        />
+
+        <button
+          onClick={this.onClickRemoveTodo}
+          ref="removeTodo"
+          type="button"
+        >
+          Remove todo
+        </button>
+
+        <br/>
+
+        <input
+          placeholder="ID"
+          ref="editId"
+          type="number"
+        />
+
+        <input
+          placeholder="New value"
+          ref="editValue"
+          type="text"
+        />
+
+        <button
+          onClick={this.onClickEditTodo}
+          ref="editTodo"
+          type="button"
+        >
+          Edit todo
+        </button>
+
+        {!!this.state.todos.length && (
+          <ul>
+            {this.state.todos.map((todo, index) => {
+              return (
+                <li key={`todo-${index}`}>
+                  <div>
+                    ID: {todo.id}
+                  </div>
+
+                  <div>
+                    Value: {todo.value}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    );
+  }
 }
 
 ReactDOM.render(<TodoApp/>, document.querySelector('#app-container'));
