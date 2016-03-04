@@ -171,7 +171,7 @@ const updateStoreValue = (singulum, result, key) => {
     singulum.$$store = result;
   }
 
-  singulum.store = new SingulumStore(singulum.$$store);
+  singulum.store = setStoreAccessValue(singulum.$$store);
 
   /**
    * If there is a watcher, fire it
@@ -208,6 +208,12 @@ class SingulumActions {
   }
 }
 
+/**
+ * Returns either store object itself or SingulumStore depending on whether we are in production or not
+ *
+ * @param {object} store
+ * @returns {object|SingulumStore}
+ */
 const setStoreAccessValue = (store) => {
   if (isProduction()) {
     return store;

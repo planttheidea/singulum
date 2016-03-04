@@ -84,8 +84,18 @@ export const getClone = (object, SingulumStore) => {
   return object;
 };
 
+/**
+ * Returns mutable version of object passed
+ *
+ * @param {*} object
+ * @returns {*}
+ */
 export const getMutableObject = (object) => {
   const isObjectArray = isArray(object);
+
+  if (!isObjectArray & !isObject(object)) {
+    return object;
+  }
 
   let mutableObject = isObjectArray ? [] : {};
 
@@ -200,6 +210,11 @@ export const isObject = (object) => {
   return TO_STRING.call(object) === '[object Object]' && !!object;
 };
 
+/**
+ * Determines if we are in production or not, based on NODE_ENV
+ *
+ * @returns {boolean}
+ */
 export const isProduction = () => {
   return __ENVIRONMENT__ === 'production';
 };
@@ -271,6 +286,15 @@ const setMutableProperty = (object, property, targetObject) => {
   });
 };
 
+/**
+ * Creates deeply-immutable version of object by only creating getters on clone
+ *
+ * @param {*} object
+ * @param {string} property
+ * @param {*} value
+ * @param {object} descriptor
+ * @returns {*}
+ */
 export const setImmutable = (object, property, value, descriptor = {}) => {
   let realValue;
 
