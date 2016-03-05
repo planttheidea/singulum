@@ -216,7 +216,7 @@ export const isObject = (object) => {
  * @returns {boolean}
  */
 export const isProduction = () => {
-  return __ENVIRONMENT__ === 'production';
+  return process.env.NODE_ENV === 'production';
 };
 
 /**

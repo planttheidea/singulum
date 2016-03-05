@@ -1,7 +1,7 @@
-var fs = require("fs"),
-    path = require("path"),
-    webpack = require("webpack"),
-    packageJson = fs.readFileSync("package.json"),
+var fs = require('fs'),
+    path = require('path'),
+    webpack = require('webpack'),
+    packageJson = fs.readFileSync('package.json'),
     packageJsonParsed = JSON.parse(packageJson),
     banner = '';
 
@@ -17,8 +17,8 @@ module.exports = {
     debug:true,
 
     devServer : {
-        contentBase: "./dist",
-        host:"localhost",
+        contentBase: './dist',
+        host:'localhost',
         inline: true,
         lazy:false,
         noInfo:false,
@@ -30,25 +30,25 @@ module.exports = {
         }
     },
 
-    devtool:"#cheap-module-eval-source-map",
+    devtool:'#cheap-module-eval-source-map',
 
     entry: [
-        path.resolve(__dirname, "src/index")
+        path.resolve(__dirname, 'src/index')
     ],
 
     eslint:{
-        configFile:"./.eslintrc",
+        configFile:'./.eslintrc',
         emitError:true,
         failOnError:true,
         failOnWarning:false,
-        formatter:require("eslint-friendly-formatter")
+        formatter:require('eslint-friendly-formatter')
     },
 
     module: {
         preLoaders: [
             {
                 exclude: /.idea|dist|node_modules/,
-                loader: "eslint-loader",
+                loader: 'eslint-loader',
                 test: /\.js$/
             }
         ],
@@ -56,7 +56,7 @@ module.exports = {
         loaders: [
             {
                 exclude: /node_modules/,
-                loader: "babel",
+                loader: 'babel',
                 test: /\.(js|jsx)?$/
             }
 
@@ -64,16 +64,20 @@ module.exports = {
     },
 
     output: {
-        filename: "dist/singulum.js",
-        library: "singulum",
-        libraryTarget: "umd",
+        filename: 'dist/singulum.js',
+        library: 'singulum',
+        libraryTarget: 'umd',
         umdNamedDefine: true
     },
 
     plugins:[
         new webpack.optimize.DedupePlugin(),
         new webpack.DefinePlugin({
-            "__ENVIRONMENT__": JSON.stringify(process.env.NODE_ENV)
+          process: {
+            env: {
+              NODE_ENV: JSON.stringify(process.env.NODE_ENV || '"development"')
+            }
+          }
         }),
         new webpack.NoErrorsPlugin(),
         new webpack.BannerPlugin(banner)
@@ -81,14 +85,14 @@ module.exports = {
 
     resolve:{
         extensions: [
-            "",
-            ".js",
-            ".jsx"
+            '',
+            '.js',
+            '.jsx'
         ],
 
-        /* Allows you to require("models/myModel") instead of needing relative paths */
+        /* Allows you to require('models/myModel') instead of needing relative paths */
         fallback : [
-            path.join(__dirname, "src")
+            path.join(__dirname, 'src')
         ],
 
         root : __dirname

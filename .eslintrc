@@ -23,7 +23,7 @@
     "es6":true
   },
   "globals":{
-    "__ENVIRONMENT__": true
+    "process": true
   },
   "parser":"babel-eslint",
   "plugins":[

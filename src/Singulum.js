@@ -47,6 +47,7 @@ const createNewSingulumNamespace = (singulum, namespace, actions = {}, initialVa
   setReadonly(singulum, namespace, new Singulum(actions, initialValues));
 
   singulum.$$store[namespace] = singulum[namespace];
+  singulum.store = setStoreAccessValue(singulum.$$store);
 
   return singulum[namespace];
 };
@@ -209,14 +210,15 @@ class SingulumActions {
 }
 
 /**
- * Returns either store object itself or SingulumStore depending on whether we are in production or not
+ * Returns either a shallow close of the store object itself or a new SingulumStore, depending on
+ * whether we are in production or not
  *
  * @param {object} store
  * @returns {object|SingulumStore}
  */
 const setStoreAccessValue = (store) => {
   if (isProduction()) {
-    return store;
+    return {...store};
   }
 
   return new SingulumStore(store);
@@ -329,6 +331,10 @@ class Singulum {
    * @returns {*}
    */
   equals(object, key) {
+    if (isInstanceOf(object, Singulum)) {
+      object = object.store;
+    }
+
     if (key) {
       return isEqual(this.$$store[key], object);
     }
@@ -468,5 +474,9 @@ class Singulum {
     return this;
   }
 }
+
+export {SingulumActions as SingulumActions};
+export {SingulumSnapshot as SingulumSnapshot};
+export {SingulumStore as SingulumStore};
 
 export default Singulum;
