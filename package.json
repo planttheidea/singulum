@@ -22,6 +22,7 @@
     "eslint-plugin-babel": "^3.1.0",
     "eslint-plugin-react": "^3.16.1",
     "expect": "^1.14.0",
+    "expect-async": "^0.1.2",
     "react": "^0.14.0",
     "react-dom": "^0.14.0",
     "webpack": "^1.12.13",
@@ -56,5 +57,5 @@
     "test-production": "NODE_ENV=production babel-node tests.js",
     "todos-app": "NODE_ENV=development ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --progress --colors --config=webpack.config.TodosApp.js"
   },
-  "version": "0.9.1"
+  "version": "0.9.2"
 }
