@@ -48,7 +48,7 @@ const initialValues = {
 export default singulum.branch(actions, initialValues, 'todosBranch');
 ```
 
-Actions are automatically-bound to the branch's store, and whatever value is returned from those functions is then applied to the state. You can scope the actions to specific properties on the branch's store as well; in this case, our actions are specific to `todos`, so they are mapped automatically to the `todos` property on our store when the branch is created (no switch statement or merging of full state needed). Now, if you wanted to add a todo:
+Actions are automatically bound to the branch's store, and whatever value is returned from those functions is then applied to the state. You can scope the actions to specific properties on the branch's store as well; in this case, our actions are specific to `todos`, so they are mapped automatically to the `todos` property on our store when the branch is created (no switch statement or merging of full state needed). Now, if you wanted to add a todo:
 
 ```
 import todosBranch from './todosBranch.js';
@@ -97,10 +97,10 @@ Redux helped with both of these concepts, as it removed Flux dispatchers in favo
 
 *That's great, so what's different about singulum?*
 
-`singulum` attempts to blend the two concepts into a more digestable solution. While Flux's separate declaration of actions and stores that need to be later bound creates boilerplate, the logical separation of actions and stores makes sense as a cause-effect relationship. While Redux set the stage for a more pure state manager, it can be difficult to understand the hierarchy of data in your state tree due to the "build many pebbles and combine them into a foundation" nature of combineReducers. Plus (subjectively) `switch` statements don't feel like an extensible paradigm.
+`singulum` attempts to blend the two concepts into a more digestable solution. While Flux's separate declaration of actions and stores that need to be later bound creates boilerplate, the logical separation of actions and stores makes sense as a cause-effect relationship. While Redux set the stage for a more pure state manager, it can be difficult to understand the hierarchy of data in your state tree due to the "build many pebbles and combine them into a foundation" nature of `combineReducers`. Plus (subjectively) `switch` statements don't feel like an extensible paradigm.
 
-`singulum` allows for simple, unified declaration of actions and stores, but creates a logical separation of them when in use, and doesn't require any boilerplate binding code. Additionally, `singulum` allows for great control over granularity of your actions (either for the entire store or a specific property), with the declarative relationship being very explicit.
+`singulum` allows for simple, unified declaration of actions and stores, but creates a logical separation of them when in use, and doesn't require any boilerplate binding code. Additionally, `singulum` allows for great control over granularity of your actions (either for the entire store or a specific property), with the relationship being very declarative and explicit.
 
 #### Browser support
 
-There are no external dependencies of `singulum`, so all modern browsers are supported. If you want to support IE9-11 then the [es6-promise polyfill](https://github.com/stefanpenner/es6-promise) (or equivalent) will need to be provided, as Promises are not supported natively in IE. Due to the lack of ES5 support for certain features (namely `Object.definePropety`), IE8 and below are not supported.
+There are no external dependencies of `singulum`, so all modern browsers are supported. If you want to support IE9-11 then the [es6-promise polyfill](https://github.com/stefanpenner/es6-promise) (or equivalent) will need to be provided, as Promises are not supported natively in IE. Due to the lack of ES5 support for certain features (namely `Object.defineProperty`), IE8 and below are not supported.
