@@ -12,6 +12,7 @@ import {
   isObject,
   isProduction,
   isString,
+  isUndefined,
   setHidden,
   setImmutable,
   setReadonly,
@@ -19,6 +20,7 @@ import {
 } from './utils';
 
 const OBJECT_FREEZE = Object.freeze;
+const isEnvProduction = isProduction();
 
 /**
  * This is a basic counter in case a namespace is not provided when creating
@@ -47,7 +49,7 @@ const createNewSingulumNamespace = (singulum, namespace, actions = {}, initialVa
   setReadonly(singulum, namespace, new Singulum(actions, initialValues));
 
   singulum.$$store[namespace] = singulum[namespace];
-  singulum.store = setStoreAccessValue(singulum.$$store);
+  singulum.store = new SingulumStore(singulum.$$store);
 
   return singulum[namespace];
 };
@@ -172,7 +174,7 @@ const updateStoreValue = (singulum, result, key) => {
     singulum.$$store = result;
   }
 
-  singulum.store = setStoreAccessValue(singulum.$$store);
+  singulum.store = new SingulumStore(singulum.$$store);
 
   /**
    * If there is a watcher, fire it
@@ -193,13 +195,17 @@ class SingulumActions {
    * @returns {Object}
    */
   constructor(actions = {}) {
+    let returnValue = isEnvProduction ? {} : this;
+
     forEachObject(actions, (value, key) => {
-      setImmutable(this, key, actions[key]);
+      setImmutable(returnValue, key, actions[key]);
     });
 
-    OBJECT_FREEZE(this);
+    if (!isEnvProduction) {
+      OBJECT_FREEZE(returnValue);
+    }
 
-    return this;
+    return returnValue;
   }
 
   log() {
@@ -208,21 +214,6 @@ class SingulumActions {
     }
   }
 }
-
-/**
- * Returns either a shallow close of the store object itself or a new SingulumStore, depending on
- * whether we are in production or not
- *
- * @param {object} store
- * @returns {object|SingulumStore}
- */
-const setStoreAccessValue = (store) => {
-  if (isProduction()) {
-    return {...store};
-  }
-
-  return new SingulumStore(store);
-};
 
 /**
  * Store class provided with [branchName].store
@@ -236,13 +227,17 @@ class SingulumStore {
    * @returns {Object}
    */
   constructor(store = {}) {
+    let returnValue = isEnvProduction ? {} : this;
+
     forEachObject(store, (value, key) => {
-      setImmutable(this, key, isInstanceOf(value, Singulum) ? value.store : value);
+      setImmutable(returnValue, key, isInstanceOf(value, Singulum) ? value.store : value);
     });
 
-    OBJECT_FREEZE(this);
+    if (!isEnvProduction) {
+      OBJECT_FREEZE(returnValue);
+    }
 
-    return this;
+    return returnValue;
   }
 
   log() {
@@ -268,9 +263,11 @@ class SingulumSnapshot {
     forEachObject(store, (value, key) => {
       const $$value = $$store[key];
 
-      this[key] = isInstanceOf($$value, Singulum) && snapshotBranches ?
-        new SingulumSnapshot($$value.store, $$value.$$store, snapshotBranches) :
-        getClone($$value, SingulumStore);
+      if (isInstanceOf($$value, Singulum)) {
+        this[key] = snapshotBranches ? new SingulumSnapshot($$value.store, $$value.$$store, snapshotBranches) : $$value;
+      } else {
+        this[key] = getClone($$value, SingulumStore);
+      }
     });
 
     return this;
@@ -297,8 +294,8 @@ class Singulum {
 
     createNewSingulumLeaves(this, actions, initialValues);
 
-    this.actions = isProduction() ? this.$$actions : new SingulumActions(this.$$actions);
-    this.store = setStoreAccessValue(this.$$store);
+    this.actions = isEnvProduction ? this.$$actions : new SingulumActions(this.$$actions);
+    this.store = new SingulumStore(this.$$store);
 
     return this;
   }
@@ -331,23 +328,19 @@ class Singulum {
    * @returns {*}
    */
   equals(object, key) {
-    if (isInstanceOf(object, Singulum)) {
-      object = object.store;
-    }
-
     if (key) {
-      return isEqual(this.$$store[key], object);
+      return isEqual(this.$$store[key], object, Singulum);
     }
 
-    return isEqual(this.$$store, object);
+    return isEqual(this.$$store, object, Singulum);
   }
 
   hashCode(key) {
     if (key) {
-      return hashCode(this.$$store[key]);
+      return hashCode(this.$$store[key], Singulum);
     }
 
-    return hashCode(this.$$store);
+    return hashCode(this.$$store, Singulum);
   }
 
   /**
@@ -360,22 +353,23 @@ class Singulum {
     let newStore = {};
 
     forEachObject(this.$$store, (value, key) => {
-      if (isInstanceOf(value, Singulum) && resetBranches) {
+      if (isInstanceOf(value, Singulum)) {
         /**
          * if snapshot value is a Singulum and you want to reset child branches, then trigger
-         * .reset() on child branch
+         * .reset() on child branch, else retain existing value
          */
-        value.reset();
-      } else if (!isInstanceOf(value, SingulumSnapshot)) {
+        newStore[key] = resetBranches ? value.reset() : value;
+      } else if (!isUndefined(this.$$initialValues[key])) {
         /**
-         * If the snapshot value is a non-Singulum value, re-apply it to the store
+         * If the value is a non-Singulum value and it existed in initialValues, assign its
+         * initialValue to the store
          */
         newStore[key] = this.$$initialValues[key];
       }
     });
 
     this.$$store = newStore;
-    this.store = setStoreAccessValue(this.$$store);
+    this.store = new SingulumStore(this.$$store);
 
     /**
      * If there is a watcher, fire it
@@ -401,22 +395,24 @@ class Singulum {
     }
 
     forEachObject(snapshot, (value, key) => {
-      if (isInstanceOf(value, SingulumSnapshot) && restoreBranches) {
-        /**
-         * if the snapshot value is a SingulumSnapshot and you want to reset
-         * child branches, then trigger restore on the child branch passing value
-         * as branch's snapshot
-         */
-        this.$$store[key].restore(value, restoreBranches);
-      } else if (!isInstanceOf(value, SingulumStore)) {
-        /**
-         * If the snapshot value is not a Singulum, re-apply it to the store
-         */
-        this.$$store[key] = value;
+      if (!isInstanceOf(value, Singulum)) {
+        if (isInstanceOf(value, SingulumSnapshot)) {
+          /**
+           * if the snapshot value is a SingulumSnapshot and you want to reset
+           * child branches, then trigger restore on the child branch passing value
+           * as branch's snapshot
+           */
+          this.$$store[key] = restoreBranches ? this.$$store[key].restore(value, restoreBranches) : value;
+        } else if (!isInstanceOf(value, SingulumStore)) {
+          /**
+           * If the snapshot value is not a Singulum, re-apply it to the store
+           */
+          this.$$store[key] = isInstanceOf(value, Singulum) ? value.store : value;
+        }
       }
     });
 
-    this.store = setStoreAccessValue(this.$$store);
+    this.store = new SingulumStore(this.$$store);
 
     /**
      * If there is a watcher, fire it

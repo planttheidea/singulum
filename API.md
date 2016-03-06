@@ -54,7 +54,7 @@ class ExampleApp extends React.Component {
 }
 ```
 
-Returns an immutable clone of the branch's store as a `SingulumStore` object in development. For performance reasons, in production a shallow clone of the branch's store is returned. 
+Returns an immutable clone of the branch's store. In non-production environments this is a `SingulumStore` object (with additional development-specific prototype methods), however for performance reasons in production it is a standard object. 
 
 All items (including sub-keys or sub-indexes on nested objects) within the store will be getters-only to prevent state from being set outside of your actions. This is obviously to your benefit, however it adds some noise to the object in the console if you want to see it in the console. As such, a convenience method has been added to see the object in it's normal form:
  
@@ -62,7 +62,7 @@ All items (including sub-keys or sub-indexes on nested objects) within the store
 exampleBranch.store.log();
 ```
 
-For performance reasons, this method is only available in development mode.
+For performance reasons, this method is only available when `NODE_ENV` is not production.
 
 #### .actions
 *@returns {SingulumActions}*
@@ -77,7 +77,7 @@ class ExampleApp extends React.Component {
 }
 ```
 
-Returns an immutable clone of the branch's actions as a `SingulumActions` object in development. For performance reasons, in production the actions object itself is returned.
+Returns an immutable clone of the branch's actions. In non-production environments this is a `SingulumActions` object (with additional development-specific prototype methods), however for performance reasons in production it is a standard object.
 
 Just like `.store`, `.actions` has a logger built-in:
 

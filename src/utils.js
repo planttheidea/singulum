@@ -118,8 +118,8 @@ export const getMutableObject = (object) => {
  * @param {*} object
  * @returns {number}
  */
-export const hashCode = (object) => {
-  const serializedObject = serialize(object);
+export const hashCode = (object, Singulum) => {
+  const serializedObject = serialize(object, Singulum);
 
   if (serializedObject === '') {
     return 0;
@@ -175,8 +175,8 @@ export const isDate = (object) => {
  * @param {*} object2
  * @returns {*}
  */
-export const isEqual = (object1, object2) => {
-  return hashCode(object1) === hashCode(object2);
+export const isEqual = (object1, object2, Singulum) => {
+  return hashCode(object1, Singulum) === hashCode(object2, Singulum);
 };
 
 /**
@@ -230,6 +230,16 @@ export const isString = (object) => {
 };
 
 /**
+ * Determines if object is undefined
+ *
+ * @param {*} object
+ * @returns {boolean}
+ */
+export const isUndefined = (object) => {
+  return object === void 0;
+};
+
+/**
  * Set property to be non-enumerable
  *
  * @param {Object} object
@@ -251,14 +261,18 @@ export const setHidden = (object, property, value) => {
  * @param {*} object
  * @returns {string}
  */
-const serialize = (object) => {
+const serialize = (object, Singulum) => {
+  if (isInstanceOf(object, Singulum)) {
+    object = object.store;
+  }
+
   const type = typeof object;
 
   let serializedCode = '';
 
   if (type === 'object') {
     for (let element in object) {
-      serializedCode += `{${type}:${element}${serialize(object[element])}}`;
+      serializedCode += `{${type}:${element}${serialize(object[element], Singulum)}}`;
     }
   } else if (type === 'function') {
     serializedCode += `{${type}:${object.toString()}}`;
@@ -396,6 +410,7 @@ export default {
   isObject,
   isProduction,
   isString,
+  isUndefined,
   setHidden,
   setImmutable,
   setReadonly,
