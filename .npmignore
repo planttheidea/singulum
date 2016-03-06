@@ -2,10 +2,14 @@
 dist/
 node_modules/
 src/
-test/
 .babelrc
 .eslintrc
 .gitignore
 .npmignore
 server.js
-webpack.config.*.js
+tests.js
+webpack.config.AsyncApp.js
+webpack.config.js
+webpack.config.minified.js
+webpack.config.simpleTodos.js
+webpack.config.TodosApp.js
