@@ -1,37 +1,36 @@
-var path = require("path"),
-    webpack = require("webpack"),
-    defaultConfig = require("./webpack.config"),
-    productionConfig = Object.assign({}, defaultConfig, {
-        cache:false,
+'use strict';
 
-        debug:false,
+const webpack = require("webpack");
+const OptimizeJsPlugin = require('optimize-js-plugin');
 
-        entry:[
-            path.resolve(__dirname, "src/index")
-        ],
+const defaultConfig = require("./webpack.config.js");
 
-        output: Object.assign({}, defaultConfig.output, {
-            filename:"dist/singulum.min.js"
-        }),
+module.exports = Object.assign({}, defaultConfig, {
+  devtool: null,
 
-        plugins:defaultConfig.plugins.concat([
-            new webpack.optimize.UglifyJsPlugin({
-                compress:{
-                    booleans:true,
-                    conditionals:true,
-                    drop_console:true,
-                    drop_debugger:true,
-                    join_vars:true,
-                    screw_ie8:true,
-                    sequences:true,
-                    warnings:false
-                },
-                mangle:true,
-                sourceMap:false
-            })
-        ])
-    });
+  output: Object.assign({}, defaultConfig.output, {
+    filename: "singulum.min.js"
+  }),
 
-delete productionConfig.devtool;
-
-module.exports = productionConfig;
+  plugins: defaultConfig.plugins.concat([
+    new webpack.optimize.DedupePlugin(),
+    new webpack.optimize.OccurrenceOrderPlugin(),
+    new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        booleans: true,
+        conditionals: true,
+        drop_console: false,
+        drop_debugger: true,
+        join_vars: true,
+        screw_ie8: true,
+        sequences: true,
+        warnings: false
+      },
+      mangle: true,
+      sourceMap: false
+    }),
+    new OptimizeJsPlugin({
+      sourceMap: false
+    })
+  ])
+});

@@ -1,100 +1,69 @@
-var fs = require('fs'),
-    path = require('path'),
-    webpack = require('webpack'),
-    packageJson = fs.readFileSync('package.json'),
-    packageJsonParsed = JSON.parse(packageJson),
-    banner = '';
+'use strict';
 
-banner += 'Library: ' + packageJsonParsed.name + '\n';
-banner += 'Description: ' + packageJsonParsed.description + '\n';
-banner += 'Author: ' + packageJsonParsed.author + '\n';
-banner += 'Version: ' + packageJsonParsed.version + '\n';
-banner += 'License: ' + packageJsonParsed.license;
+const path = require('path');
+const webpack = require('webpack');
+const LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
 
 module.exports = {
-    cache:true,
+  devtool: '#source-map',
 
-    debug:true,
+  entry: [
+    path.resolve(__dirname, 'src', 'index.js')
+  ],
 
-    devServer : {
-        contentBase: './dist',
-        host:'localhost',
-        inline: true,
-        lazy:false,
-        noInfo:false,
-        quiet:false,
-        port: 4000,
-        stats:{
-            colors:true,
-            progress:true
-        }
-    },
+  eslint: {
+    configFile: '.eslintrc',
+    emitError: true,
+    failOnError: true,
+    failOnWarning: true,
+    formatter: require('eslint-friendly-formatter')
+  },
 
-    devtool:'#cheap-module-eval-source-map',
-
-    entry: [
-        path.resolve(__dirname, 'src/index')
+  module: {
+    preLoaders: [
+      {
+        include: [
+          /src/
+        ],
+        loader: 'eslint-loader',
+        test: /\.js$/
+      }
     ],
 
-    eslint:{
-        configFile:'./.eslintrc',
-        emitError:true,
-        failOnError:true,
-        failOnWarning:false,
-        formatter:require('eslint-friendly-formatter')
-    },
-
-    module: {
-        preLoaders: [
-            {
-                exclude: /.idea|dist|node_modules/,
-                loader: 'eslint-loader',
-                test: /\.js$/
-            }
+    loaders: [
+      {
+        include: [
+          /src/
         ],
+        loader: 'babel',
+        test: /\.js?$/
+      }
+    ]
+  },
 
-        loaders: [
-            {
-                exclude: /node_modules/,
-                loader: 'babel',
-                test: /\.(js|jsx)?$/
-            }
+  output: {
+    filename: 'singulum.js',
+    library: 'Singulum',
+    libraryTarget: 'umd',
+    path: path.resolve(__dirname, 'dist'),
+    umdNamedDefine: true
+  },
 
-        ]
-    },
+  plugins: [
+    new webpack.EnvironmentPlugin([
+      'NODE_ENV'
+    ]),
+    new LodashModuleReplacementPlugin({
+      collections: true
+    })
+  ],
 
-    output: {
-        filename: 'dist/singulum.js',
-        library: 'singulum',
-        libraryTarget: 'umd',
-        umdNamedDefine: true
-    },
-
-    plugins:[
-        new webpack.optimize.DedupePlugin(),
-        new webpack.DefinePlugin({
-          process: {
-            env: {
-              NODE_ENV: JSON.stringify(process.env.NODE_ENV || '"development"')
-            }
-          }
-        }),
-        new webpack.NoErrorsPlugin(),
-        new webpack.BannerPlugin(banner)
+  resolve: {
+    extensions: [
+      '',
+      '.js'
     ],
 
-    resolve:{
-        extensions: [
-            '',
-            '.js',
-            '.jsx'
-        ],
-
-        /* Allows you to require('models/myModel') instead of needing relative paths */
-        fallback : [
-            path.join(__dirname, 'src')
-        ],
-
-        root : __dirname
-    }
+    root: __dirname
+  }
 };
