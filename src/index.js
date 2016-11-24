@@ -33,7 +33,25 @@ import {
   setAjaxDefaults
 } from './ajax';
 
-window.React = React;
+// router
+import {
+  IndexLink,
+  IndexRedirect,
+  IndexRoute,
+  Link,
+  Route,
+  Router,
+  RouterContext,
+  applyRouterMiddleware,
+  createRoutes,
+  createHistory,
+  formatPattern,
+  locationShape,
+  match,
+  routerShape,
+  syncHistoryWithStore,
+  withRouter
+} from './router.js';
 
 /**
  * render the passed component with the provided store
@@ -67,6 +85,24 @@ export {post};
 export {put};
 export {setAjaxDefaults};
 
+export {IndexLink};
+export {IndexRedirect};
+export {IndexRoute};
+export {Link};
+export {Route};
+export {Router};
+export {RouterContext};
+export {applyRouterMiddleware};
+export {createRoutes};
+export {createHistory};
+export {formatPattern};
+export {locationShape};
+export {match};
+export {routerShape};
+export {syncHistoryWithStore};
+export {withRouter};
+
+export {React};
 export {render};
 export {React as jsx};
 

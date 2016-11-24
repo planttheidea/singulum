@@ -49,7 +49,24 @@ const setIsChecked = module.createAction(SET_CHECK, (isChecked) => {
 });
 
 const getStuffHandler = (state, {payload}) => {
-  return state;
+  if (!payload) {
+    return {
+      ...state,
+      stuff: 'Getting the stuff'
+    };
+  }
+
+  if (payload instanceof Error) {
+    return {
+      ...state,
+      stuff: 'Problem getting the stuff'
+    };
+  }
+
+  return {
+    ...state,
+    stuff: 'Got the stuff'
+  };
 };
 
 const updateCounter = (state, {payload}) => {
@@ -62,7 +79,7 @@ const updateCounter = (state, {payload}) => {
 const INITIAL_STATE = {
   count: 0,
   isChecked: false,
-  otherStuff: 'foo'
+  stuff: null
 };
 
 module.createReducer(INITIAL_STATE, {

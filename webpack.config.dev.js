@@ -21,7 +21,7 @@ const loaders = defaultConfig.module.loaders.map((loader) => {
       cacheable: true,
       include: [
         /src/,
-        /DEV_ONLY/
+        /TodoList/
       ],
       query: {
         plugins: [
@@ -41,6 +41,7 @@ module.exports = Object.assign({}, defaultConfig, {
 
   devServer: {
     contentBase: './dist',
+    historyApiFallback: true,
     host: 'localhost',
     inline: true,
     lazy: false,
@@ -54,7 +55,7 @@ module.exports = Object.assign({}, defaultConfig, {
   },
 
   entry: [
-    path.resolve(__dirname, 'DEV_ONLY', 'index.js')
+    path.resolve(__dirname, 'TodoList', 'index.js')
   ],
 
   eslint: Object.assign({}, defaultConfig.eslint, {
@@ -74,6 +75,9 @@ module.exports = Object.assign({}, defaultConfig, {
 
   plugins: [
     ...defaultConfig.plugins,
+    new webpack.ProvidePlugin({
+      React: 'react'
+    }),
     new HtmlWebpackPlugin(),
     new WebpackDashboard()
   ]

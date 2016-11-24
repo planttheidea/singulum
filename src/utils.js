@@ -7,6 +7,7 @@ import {
 
 // constants
 import {
+  REACT_ELEMENT_TYPE,
   REACT_LIFECYCLE_METHODS,
 
   keys
@@ -61,6 +62,26 @@ const isReactClass = (object) => {
 };
 
 /**
+ * is the object a composite component wrapper for React
+ * 
+ * @param {*} object
+ * @returns {boolean}
+ */
+const isReactCompositeComponentWrapper = (object) => {
+  return !!(object && object._instance && object._instance.props);
+};
+
+/**
+ * is the object a React element
+ *
+ * @param {ReactElement} object
+ * @returns {boolean}
+ */
+const isReactElement = (object) => {
+  return !!object && object.$$type === REACT_ELEMENT_TYPE;
+};
+
+/**
  * is the object passed an event
  *
  * @param {*} object
@@ -79,6 +100,14 @@ const memoizeSerializer = function() {
   return JSON.stringify(arguments, (name, value) => {
     if (isFunction(value)) {
       return `${value}`;
+    }
+
+    if (isReactElement(value)) {
+      return value.props;
+    }
+
+    if (isReactCompositeComponentWrapper(value)) {
+      return value._instance.props;
     }
 
     return value;

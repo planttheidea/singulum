@@ -1,11 +1,18 @@
+// external dependencies
 import axios from 'axios';
+import isPlainObject from 'lodash/isPlainObject';
+
+// utils
+import {
+  keys
+} from './utils';
 
 const setAjaxDefaults = ({baseURL, headers} = {}, axiosInstance = axios) => {
   if (baseURL) {
     axiosInstance.defaults.baseURL = baseURL;
   }
 
-  if (headers) {
+  if (isPlainObject(headers)) {
     const {
       del,
       get,
@@ -23,7 +30,7 @@ const setAjaxDefaults = ({baseURL, headers} = {}, axiosInstance = axios) => {
     axiosInstance.defaults.headers.post = post;
     axiosInstance.defaults.headers.put = put;
 
-    Object.keys(common).forEach((key) => {
+    keys(common).forEach((key) => {
       axiosInstance.defaults.headers.common[key] = common[key];
     });
   }

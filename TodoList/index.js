@@ -1,4 +1,5 @@
 import {
+  IndexRoute,
   Router,
   Route,
   render,
@@ -13,6 +14,9 @@ import store from './store';
 // history
 import history from './history';
 
+// components
+import Home from './pages/Home';
+
 const div = document.createElement('div');
 
 const syncedHistory = syncHistoryWithStore(history, store);
@@ -23,6 +27,7 @@ render((
       component={App}
       path="/"
     >
+      <IndexRoute component={Home}/>
     </Route>
   </Router>
 ), div, store);

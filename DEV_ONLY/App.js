@@ -67,18 +67,36 @@ const options = {
   ...local
 };
 
-const App = ({count, isChecked, onClickDecrement, onClickIncrement, onClickSetCheck}) => {
+const STYLES = {
+  div: {
+    marginBottom: 15
+  },
+  buttonDiv: {
+    marginBottom: 5
+  },
+  span: {
+    marginRight: 5
+  }
+};
+
+const App = ({count, isChecked, onClickDecrement, onClickIncrement, onClickSetCheck, stuff}) => {
   return (
     <div>
       <h1>
         App
       </h1>
 
-      <div>
+      {stuff && (
+        <div style={STYLES.div}>
+          {stuff}
+        </div>
+      )}
+
+      <div style={STYLES.buttonDiv}>
         Current count: {count}
       </div>
 
-      <div>
+      <div style={STYLES.buttonDiv}>
         <Button onClick={onClickIncrement}>
           Click me to increment the count
         </Button>
@@ -91,20 +109,20 @@ const App = ({count, isChecked, onClickDecrement, onClickIncrement, onClickSetCh
         </Button>
       </div>
 
-      <div>
+      <div style={STYLES.div}>
+        <span style={STYLES.span}>
+          Count:
+        </span>
+
+        <Input/>
+      </div>
+
+      <div style={STYLES.div}>
         <Checkbox
           isChecked={isChecked}
           label={`${isChecked ? 'Uncheck' : 'Check'} me`}
           onClick={onClickSetCheck}
         />
-      </div>
-
-      <div>
-        <h6>
-          Count
-        </h6>
-
-        <Input/>
       </div>
     </div>
   );

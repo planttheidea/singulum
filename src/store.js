@@ -1,6 +1,8 @@
 // external dependencies
 import isArray from 'lodash/isArray';
-import isFunction from 'lodash/isFunction';
+import {
+  routerReducer
+} from 'react-router-redux';
 import {
   applyMiddleware,
   combineReducers,
@@ -13,17 +15,20 @@ import {
   getModules
 } from './modules';
 
-const createStore = (modules, preloadedState, ...middlewares) => {
+const DEFAULT_REDUCERS_WITH_HISTORY = {
+  routing: routerReducer
+};
+
+const createStore = (modules, {
+  history,
+  middlewares,
+  preloadedState
+}) => {
   if (!isArray(modules)) {
     throw new TypeError('The first parameter must be an array of modules.');
   }
 
   let enhancers = [...middlewares];
-
-  if (isFunction(preloadedState)) {
-    enhancers.unshift(preloadedState);
-    preloadedState = {};
-  }
 
   const mapOfReducers = modules.reduce((reducers, {namespace}) => {
     const module = getModules(namespace);
@@ -36,7 +41,7 @@ const createStore = (modules, preloadedState, ...middlewares) => {
       ...reducers,
       [namespace]: module.reducer
     };
-  }, {});
+  }, history ? DEFAULT_REDUCERS_WITH_HISTORY : {});
 
   const allReducers = combineReducers(mapOfReducers);
 

@@ -1,5 +1,4 @@
 // external dependencies
-import isPlainObject from 'lodash/isPlainObject';
 import React, {
   Component as ReactComponent
 } from 'react';
@@ -185,15 +184,11 @@ const getStatelessComponent = (PassedComponent, options) => {
 /**
  * create a simple component where props are rendered
  *
- * @param {Object|Component|function} options
  * @param {Component|function} PassedComponent
+ * @param {Object} options={}
  * @returns {Component|function(Component): Component}
  */
-const createComponent = (options, PassedComponent) => {
-  if (!isPlainObject(options)) {
-    return options;
-  }
-
+const createComponent = (PassedComponent, options = {}) => {
   if (isReactClass(PassedComponent)) {
     return getStatefulComponent(PassedComponent, options);
   }
