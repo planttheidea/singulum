@@ -72,8 +72,10 @@ const isReactEvent = (object) => {
 
 /**
  * serialize the values for memoization
+ *
+ * @returns {string}
  */
-const memoizeSerializer = function () {
+const memoizeSerializer = function() {
   return JSON.stringify(arguments, (name, value) => {
     if (isFunction(value)) {
       return `${value}`;
@@ -82,8 +84,6 @@ const memoizeSerializer = function () {
     return value;
   });
 };
-
-memoizeSerializer._name = 'memoizeSerializer';
 
 /**
  * use fast-memoize with a custom serializer to handle memoizing functions

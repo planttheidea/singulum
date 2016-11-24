@@ -109,7 +109,7 @@ const getStatelessComponent = (PassedComponent, options) => {
     methods = {};
 
     assignChildContext = () => {
-      this.getChildContext = function () {
+      this.getChildContext = function() {
         return getChildContext(this.getPropsToPass(this.props, this.methods), this.context);
       };
     };
