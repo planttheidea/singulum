@@ -54,7 +54,7 @@ module.exports = Object.assign({}, defaultConfig, {
   },
 
   entry: [
-    path.resolve(__dirname, 'DEV_ONLY', 'App.js')
+    path.resolve(__dirname, 'DEV_ONLY', 'index.js')
   ],
 
   eslint: Object.assign({}, defaultConfig.eslint, {

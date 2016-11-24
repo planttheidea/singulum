@@ -1,5 +1,5 @@
 // external dependencies
-import isFunction from 'lodash/isFunction';
+import isPlainObject from 'lodash/isPlainObject';
 import React, {
   Component as ReactComponent
 } from 'react';
@@ -16,24 +16,62 @@ import {
 import {
   getComponentMethods,
   getPropsAndMethods,
+  isReactClass,
   isReactEvent,
   memoize
 } from './utils';
 
 /**
- * create a simple component where props are rendered
+ * get the stateful component that, if the options are passed, is connected to redux
  *
+ * @param {Component} PassedComponent
  * @param {Object} options
- * @param {Component|function} PassedComponent
  * @returns {Component}
  */
-const createComponent = (options, PassedComponent) => {
-  if (isFunction(options)) {
-    return options;
-  }
-
+const getStatefulComponent = (PassedComponent, options) => {
   const {
     contextTypes,
+    mapDispatchToProps,
+    mapStateToProps,
+    mergeProps,
+    propTypes,
+    reduxOptions
+  } = options;
+
+  if (contextTypes) {
+    PassedComponent.contextTypes = contextTypes;
+  }
+
+  if (propTypes) {
+    PassedComponent.propTypes = propTypes;
+  }
+
+  class StatefulComponent extends PassedComponent {
+    render() {
+      return super.render();
+    }
+  }
+
+  if (mapDispatchToProps || mapStateToProps || mergeProps || reduxOptions) {
+    return connect(mapStateToProps, mapDispatchToProps, mergeProps, reduxOptions)(StatefulComponent);
+  }
+
+  return StatefulComponent;
+};
+
+/**
+ * get the stateless component HOC that has local and lifecycle methods based on
+ * the options, as well as possibly being connected to redux
+ *
+ * @param {function} PassedComponent
+ * @param {Object} options
+ * @returns {Component}
+ */
+const getStatelessComponent = (PassedComponent, options) => {
+  const {
+    childContextTypes,
+    contextTypes,
+    getChildContext,
     mapDispatchToProps,
     mapStateToProps,
     mergeProps,
@@ -47,19 +85,34 @@ const createComponent = (options, PassedComponent) => {
     localMethods
   } = getComponentMethods(restOfOptions);
 
-  PassedComponent.contextTypes = contextTypes;
-  PassedComponent.propTypes = propTypes;
+  if (contextTypes) {
+    PassedComponent.contextTypes = contextTypes;
+  }
 
-  class Component extends ReactComponent {
+  if (propTypes) {
+    PassedComponent.propTypes = propTypes;
+  }
+
+  class StatelessComponent extends ReactComponent {
     constructor(...args) {
       super(...args);
 
       this.assignLifecycleMethods(lifecycleMethods);
       this.assignLocalMethods(localMethods);
+
+      if (childContextTypes && getChildContext) {
+        this.assignChildContext();
+      }
     }
 
     getPropsToPass = memoize(getPropsAndMethods);
     methods = {};
+
+    assignChildContext = () => {
+      this.getChildContext = function () {
+        return getChildContext(this.getPropsToPass(this.props, this.methods), this.context);
+      };
+    };
 
     /**
      * assign the lifecycle methods to the instance
@@ -118,11 +171,36 @@ const createComponent = (options, PassedComponent) => {
     }
   }
 
-  if (mapDispatchToProps || mapStateToProps || mergeProps || reduxOptions) {
-    return connect(mapStateToProps, mapDispatchToProps, mergeProps, reduxOptions)(Component);
+  if (childContextTypes) {
+    StatelessComponent.childContextTypes = childContextTypes;
   }
 
-  return Component;
+  if (mapDispatchToProps || mapStateToProps || mergeProps || reduxOptions) {
+    return connect(mapStateToProps, mapDispatchToProps, mergeProps, reduxOptions)(StatelessComponent);
+  }
+
+  return StatelessComponent;
 };
+
+/**
+ * create a simple component where props are rendered
+ *
+ * @param {Object|Component|function} options
+ * @param {Component|function} PassedComponent
+ * @returns {Component|function(Component): Component}
+ */
+const createComponent = (options, PassedComponent) => {
+  if (!isPlainObject(options)) {
+    return options;
+  }
+
+  if (isReactClass(PassedComponent)) {
+    return getStatefulComponent(PassedComponent, options);
+  }
+
+  return getStatelessComponent(PassedComponent, options);
+};
+
+export {ReactComponent as StatefulComponent};
 
 export default createComponent;

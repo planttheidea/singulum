@@ -1,6 +1,9 @@
 // external dependencies
 import fastMemoize from 'fast-memoize';
 import isFunction from 'lodash/isFunction';
+import {
+  Component
+} from 'react';
 
 // constants
 import {
@@ -48,6 +51,16 @@ const getPropsAndMethods = (props, methods) => {
 };
 
 /**
+ * is the object an extension of the Component prototype
+ *
+ * @param {*} object
+ * @returns {boolean}
+ */
+const isReactClass = (object) => {
+  return Component.isPrototypeOf(object);
+};
+
+/**
  * is the object passed an event
  *
  * @param {*} object
@@ -57,6 +70,9 @@ const isReactEvent = (object) => {
   return !!(object && object.nativeEvent && object.nativeEvent instanceof Event);
 };
 
+/**
+ * serialize the values for memoization
+ */
 const memoizeSerializer = function () {
   return JSON.stringify(arguments, (name, value) => {
     if (isFunction(value)) {
@@ -69,6 +85,12 @@ const memoizeSerializer = function () {
 
 memoizeSerializer._name = 'memoizeSerializer';
 
+/**
+ * use fast-memoize with a custom serializer to handle memoizing functions
+ *
+ * @param {function} fn
+ * @returns {function}
+ */
 const memoize = (fn) => {
   return fastMemoize(fn, {
     serializer: memoizeSerializer
@@ -77,6 +99,7 @@ const memoize = (fn) => {
 
 export {getComponentMethods};
 export {getPropsAndMethods};
+export {isReactClass};
 export {isReactEvent};
 export {memoize};
 export {memoizeSerializer};

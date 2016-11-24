@@ -10,7 +10,9 @@ import {
 } from 'react-redux';
 
 // components
-import createComponent from './components';
+import createComponent, {
+  StatefulComponent
+} from './components';
 
 // modules
 import createModule, {
@@ -48,6 +50,7 @@ const render = (Component, element, store) => {
   ), element);
 };
 
+export {StatefulComponent};
 export {createComponent};
 export {PropTypes};
 

@@ -1,6 +1,6 @@
 import createComponent from '../../src';
 
-const Checkbox = createComponent(({isChecked, label, ...otherProps}) => {
+const Checkbox = ({isChecked, label, ...otherProps}) => {
   return (
     <label>
       <input
@@ -14,6 +14,6 @@ const Checkbox = createComponent(({isChecked, label, ...otherProps}) => {
       </span>
     </label>
   );
-});
+};
 
-export default Checkbox;
+export default createComponent(Checkbox);

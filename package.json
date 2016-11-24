@@ -6,7 +6,6 @@
   "description": "State management sanity with minimal effort",
   "homepage": "https://github.com/planttheidea/singulum#readme",
   "keywords": [
-    "singulum",
     "flux",
     "redux",
     "react",

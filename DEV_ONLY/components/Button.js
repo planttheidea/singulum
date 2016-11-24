@@ -2,15 +2,13 @@ import createComponent, {
   PropTypes
 } from '../../src';
 
-const contextTypes = {
-  appCounter: PropTypes.number
-};
-
 const options = {
-  contextTypes
+  contextTypes: {
+    foo: PropTypes.string
+  }
 };
 
-const Button = createComponent(options, ({children, ...otherProps}) => {
+const Button = ({children, ...otherProps}) => {
   return (
     <button
       type="button"
@@ -19,6 +17,6 @@ const Button = createComponent(options, ({children, ...otherProps}) => {
       {children}
     </button>
   );
-});
+};
 
-export default Button;
+export default createComponent(options, Button);

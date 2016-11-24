@@ -12,6 +12,7 @@ const GET_STUFF_ERROR = 'GET_STUFF_ERROR';
 const GET_STUFF_SUCCESS = 'GET_STUFF_SUCCESS';
 const INCREASE_COUNTER = 'INCREASE_COUNTER';
 const SET_CHECK = 'SET_CHECK';
+const SET_COUNTER = 'SET_COUNTER';
 
 const decreaseCounter = module.createAction(DECREASE_COUNTER, (currentCount) => {
   return currentCount - 1;
@@ -39,13 +40,15 @@ const increaseCounter = module.createAction(INCREASE_COUNTER, (currentCount) => 
   return currentCount + 1;
 });
 
+const setCount = module.createAction(SET_COUNTER, (count) => {
+  return count;
+});
+
 const setIsChecked = module.createAction(SET_CHECK, (isChecked) => {
   return isChecked;
 });
 
 const getStuffHandler = (state, {payload}) => {
-  console.log(payload);
-
   return state;
 };
 
@@ -69,6 +72,13 @@ module.createReducer(INITIAL_STATE, {
   [getStuff.onRequest]: getStuffHandler,
   [getStuff.onError]: getStuffHandler,
   [getStuff.onSuccess]: getStuffHandler,
+
+  [setCount](state, {payload}) {
+    return {
+      ...state,
+      count: payload
+    };
+  },
 
   [setIsChecked](state, {payload}) {
     return {
@@ -101,5 +111,6 @@ export {decreaseCounter};
 export {getStuff};
 export {increaseCounter};
 export {setIsChecked};
+export {setCount};
 
 export default module;

@@ -1,6 +1,5 @@
 import createComponent, {
-  PropTypes,
-  render
+  PropTypes
 } from '../src/index';
 
 import * as actions from './modules/app';
@@ -8,11 +7,12 @@ import * as actions from './modules/app';
 // components
 import Button from './components/Button';
 import Checkbox from './components/Checkbox';
-
-// store
-import store from './store';
+import Input from './components/Input';
 
 const react = {
+  childContextTypes: {
+    foo: PropTypes.string
+  },
   propTypes: {
     count: PropTypes.number,
     getStuff: PropTypes.func.isRequired,
@@ -22,8 +22,18 @@ const react = {
     onClickSetCheck: PropTypes.func.isRequired
   },
 
-  componentDidMount(props) {
+  getChildContext(props) {
+    const foo = props.count % 2 === 0 ? 'bar' : 'baz';
+
+    return {
+      foo
+    };
+  },
+
+  componentDidMount(props, context) {
     console.log('mounted with props: ', props);
+
+    props.getStuff();
   },
   componentDidUpdate(previousProps, props) {
     console.log('updated with props: ', props);
@@ -57,13 +67,7 @@ const options = {
   ...local
 };
 
-const App = createComponent(options, ({
-  count,
-  isChecked,
-  onClickDecrement,
-  onClickIncrement,
-  onClickSetCheck
-}) => {
+const App = ({count, isChecked, onClickDecrement, onClickIncrement, onClickSetCheck}) => {
   return (
     <div>
       <h1>
@@ -94,14 +98,16 @@ const App = createComponent(options, ({
           onClick={onClickSetCheck}
         />
       </div>
+
+      <div>
+        <h6>
+          Count
+        </h6>
+
+        <Input/>
+      </div>
     </div>
   );
-});
+};
 
-const div = document.createElement('div');
-
-render((
-  <App count={0}/>
-), div, store);
-
-document.body.appendChild(div);
+export default createComponent(options, App);
