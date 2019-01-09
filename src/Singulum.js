@@ -16,7 +16,7 @@ import {
   setHidden,
   setImmutable,
   setReadonly,
-  throwError
+  throwError,
 } from './utils';
 
 const OBJECT_FREEZE = Object.freeze;
@@ -29,99 +29,6 @@ const isEnvProduction = isProduction();
 let namespaceIncrementer = 0;
 
 /**
- * Creates namespaced Singulum within the object, aka make a branch
- *
- * @param {Singulum} singulum
- * @param {string} namespace
- * @param {Object} actions
- * @param {Object} initialValues
- * @returns {Object}
- */
-const createNewSingulumNamespace = (singulum, namespace, actions = {}, initialValues = {}) => {
-  /**
-   * if no namespace is provided, use the simple counter to create a unique entry
-   */
-  if (!namespace) {
-    namespace = namespaceIncrementer;
-    namespaceIncrementer++;
-  }
-
-  setReadonly(singulum, namespace, new Singulum(actions, initialValues));
-
-  singulum.$$store[namespace] = singulum[namespace];
-  singulum.store = new SingulumStore(singulum.$$store);
-
-  return singulum[namespace];
-};
-
-/**
- * Creates new item in the store, and creates related action with wrapper
- *
- * @param {Singulum} singulum
- * @param {Object} actions
- * @param {Object} initialValues
- */
-const createNewSingulumLeaves = (singulum, actions = {}, initialValues = {}) => {
-  forEachObject(initialValues, (initialValue, storeKey) => {
-    /**
-     * Create separate clones for initialValues and store, so that references between
-     * the two do not exist
-     */
-    singulum.$$initialValues[storeKey] = initialValue;
-    singulum.$$store[storeKey] = getFreshValueClone(initialValue);
-  });
-
-  forEachObject(actions, (action, actionKey) => {
-    /**
-     * if action is a function, then it applies to the entire state
-     */
-    if (isFunction(action)) {
-      singulum.$$actions[actionKey] = createWrapperFunction(singulum, action);
-    } else if (isObject(action)) {
-      /**
-       * if action is a map of functions, it applies to a specific key on the store
-       */
-      forEachObject(action, (actionFn, actionFnKey) => {
-        singulum.$$actions[actionFnKey] = createWrapperFunction(singulum, actionFn, actionKey);
-      });
-    }
-  });
-};
-
-/**
- * Creates bound and wrapped function to store new value internally and invoke listener
- * If function is asyncronous, it waits for the promise to be resolved before firing
- *
- * @param {Singulum} singulum
- * @param {Function} fn
- * @param {string} key
- * @return {Function}
- */
-const createWrapperFunction = (singulum, fn, key) => {
-  /**
-   * @note must be a standard function instead of an arrow function, to allow the this binding
-   */
-  return bindFunction(function (...args) {
-    const primaryArgument = key ? singulum.$$store[key] : singulum.$$store;
-    const result = fn(primaryArgument, ...args);
-
-    /**
-     * If the result is a Promise, wait for resolution and then return the data
-     */
-    if (isFunction(result.then)) {
-      return result.then((resultValue) => {
-        return updateStoreValue(this, resultValue, key);
-      });
-    }
-
-    /**
-     * Otherwise, wrap the return data in a native Promise and return it
-     */
-    return Promise.resolve(updateStoreValue(this, result, key));
-  }, singulum);
-};
-
-/**
  *
  * @param {Singulum} singulum
  */
@@ -130,6 +37,72 @@ const fireWatchers = (singulum) => {
     watcher(singulum.store);
   });
 };
+
+/**
+ * Actions class provided with [branchName].actions
+ */
+export class SingulumActions {
+  /**
+   * Create immutable and frozen object of internal actions
+   *
+   * @param {Object} actions
+   * @returns {Object}
+   */
+  constructor(actions = {}) {
+    let returnValue = isEnvProduction ? {} : this;
+
+    forEachObject(actions, (value, key) => {
+      setImmutable(returnValue, key, actions[key]);
+    });
+
+    if (!isEnvProduction) {
+      OBJECT_FREEZE(returnValue);
+    }
+
+    return returnValue;
+  }
+
+  log() {
+    if (console) {
+      // eslint-disable-next-line no-console
+      console.log(getMutableObject(this));
+    }
+  }
+}
+
+/**
+ * Store class provided with [branchName].store
+ */
+export class SingulumStore {
+  /**
+   * Create immutable and frozen object of store
+   * branched from it
+   *
+   * @param {Object} store
+   * @returns {Object}
+   */
+  constructor(store = {}) {
+    let returnValue = isEnvProduction ? {} : this;
+
+    forEachObject(store, (value, key) => {
+      // eslint-disable-next-line no-use-before-define
+      setImmutable(returnValue, key, isInstanceOf(value, Singulum) ? value.store : value);
+    });
+
+    if (!isEnvProduction) {
+      OBJECT_FREEZE(returnValue);
+    }
+
+    return returnValue;
+  }
+
+  log() {
+    if (console) {
+      // eslint-disable-next-line no-console
+      console.log(getMutableObject(this));
+    }
+  }
+}
 
 /**
  * If the value is a class, return a cloned version of that class including prototype,
@@ -185,72 +158,73 @@ const updateStoreValue = (singulum, result, key) => {
 };
 
 /**
- * Actions class provided with [branchName].actions
+ * Creates bound and wrapped function to store new value internally and invoke listener
+ * If function is asyncronous, it waits for the promise to be resolved before firing
+ *
+ * @param {Singulum} singulum
+ * @param {Function} fn
+ * @param {string} key
+ * @return {Function}
  */
-class SingulumActions {
+const createWrapperFunction = (singulum, fn, key) =>
   /**
-   * Create immutable and frozen object of internal actions
-   *
-   * @param {Object} actions
-   * @returns {Object}
+   * @note must be a standard function instead of an arrow function, to allow the this binding
    */
-  constructor(actions = {}) {
-    let returnValue = isEnvProduction ? {} : this;
+  bindFunction(function(...args) {
+    const primaryArgument = key ? singulum.$$store[key] : singulum.$$store;
+    const result = fn(primaryArgument, ...args);
 
-    forEachObject(actions, (value, key) => {
-      setImmutable(returnValue, key, actions[key]);
-    });
-
-    if (!isEnvProduction) {
-      OBJECT_FREEZE(returnValue);
+    /**
+     * If the result is a Promise, wait for resolution and then return the data
+     */
+    if (isFunction(result.then)) {
+      return result.then((resultValue) => updateStoreValue(this, resultValue, key));
     }
 
-    return returnValue;
-  }
-
-  log() {
-    if (console) {
-      console.log(getMutableObject(this));
-    }
-  }
-}
+    /**
+     * Otherwise, wrap the return data in a native Promise and return it
+     */
+    return Promise.resolve(updateStoreValue(this, result, key));
+  }, singulum);
 
 /**
- * Store class provided with [branchName].store
+ * Creates new item in the store, and creates related action with wrapper
+ *
+ * @param {Singulum} singulum
+ * @param {Object} actions
+ * @param {Object} initialValues
  */
-class SingulumStore {
-  /**
-   * Create immutable and frozen object of store
-   * branched from it
-   *
-   * @param {Object} store
-   * @returns {Object}
-   */
-  constructor(store = {}) {
-    let returnValue = isEnvProduction ? {} : this;
+const createNewSingulumLeaves = (singulum, actions = {}, initialValues = {}) => {
+  forEachObject(initialValues, (initialValue, storeKey) => {
+    /**
+     * Create separate clones for initialValues and store, so that references between
+     * the two do not exist
+     */
+    singulum.$$initialValues[storeKey] = initialValue;
+    singulum.$$store[storeKey] = getFreshValueClone(initialValue);
+  });
 
-    forEachObject(store, (value, key) => {
-      setImmutable(returnValue, key, isInstanceOf(value, Singulum) ? value.store : value);
-    });
-
-    if (!isEnvProduction) {
-      OBJECT_FREEZE(returnValue);
+  forEachObject(actions, (action, actionKey) => {
+    /**
+     * if action is a function, then it applies to the entire state
+     */
+    if (isFunction(action)) {
+      singulum.$$actions[actionKey] = createWrapperFunction(singulum, action);
+    } else if (isObject(action)) {
+      /**
+       * if action is a map of functions, it applies to a specific key on the store
+       */
+      forEachObject(action, (actionFn, actionFnKey) => {
+        singulum.$$actions[actionFnKey] = createWrapperFunction(singulum, actionFn, actionKey);
+      });
     }
-
-    return returnValue;
-  }
-
-  log() {
-    if (console) {
-      console.log(getMutableObject(this));
-    }
-  }
-}
+  });
+};
 
 /**
  * Snapshot class provided with [branchName].snapshot();
  */
-class SingulumSnapshot {
+export class SingulumSnapshot {
   /**
    * Create snapshot clone of store, optionally snapshotting deeply
    *
@@ -263,6 +237,7 @@ class SingulumSnapshot {
     forEachObject(store, (value, key) => {
       const $$value = $$store[key];
 
+      // eslint-disable-next-line no-use-before-define
       if (isInstanceOf($$value, Singulum)) {
         this[key] = snapshotBranches ? new SingulumSnapshot($$value.store, $$value.$$store, snapshotBranches) : $$value;
       } else {
@@ -275,9 +250,36 @@ class SingulumSnapshot {
 }
 
 /**
+ * Creates namespaced Singulum within the object, aka make a branch
+ *
+ * @param {Singulum} singulum
+ * @param {string} namespace
+ * @param {Object} actions
+ * @param {Object} initialValues
+ * @returns {Object}
+ */
+const createNewSingulumNamespace = (singulum, namespace, actions = {}, initialValues = {}) => {
+  /**
+   * if no namespace is provided, use the simple counter to create a unique entry
+   */
+  if (!namespace) {
+    namespace = namespaceIncrementer;
+    namespaceIncrementer++;
+  }
+
+  // eslint-disable-next-line no-use-before-define
+  setReadonly(singulum, namespace, new Singulum(actions, initialValues));
+
+  singulum.$$store[namespace] = singulum[namespace];
+  singulum.store = new SingulumStore(singulum.$$store);
+
+  return singulum[namespace];
+};
+
+/**
  * Main class
  */
-class Singulum {
+export class Singulum {
   /**
    * Create singulum infrastructure, and populate leaves provided
    *
@@ -438,13 +440,11 @@ class Singulum {
    * @returns {Singulum}
    */
   unwatch(callback) {
-    const watcherIndex = findIndex(this.$$watchers, (watcher) => {
-      return watcher === callback;
-    });
+    const watcherIndex = findIndex(this.$$watchers, (watcher) => watcher === callback);
 
     this.$$watchers = [
       ...this.$$watchers.slice(0, watcherIndex),
-      ...this.$$watchers.slice(watcherIndex + 1, this.$$watchers.length)
+      ...this.$$watchers.slice(watcherIndex + 1, this.$$watchers.length),
     ];
 
     return this;
@@ -461,18 +461,11 @@ class Singulum {
      * Make sure callback is actually a function before setting it
      */
     if (isFunction(callback)) {
-      this.$$watchers = [
-        ...this.$$watchers,
-        callback
-      ];
+      this.$$watchers = [...this.$$watchers, callback];
     }
 
     return this;
   }
 }
-
-export {SingulumActions as SingulumActions};
-export {SingulumSnapshot as SingulumSnapshot};
-export {SingulumStore as SingulumStore};
 
 export default Singulum;

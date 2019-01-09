@@ -3,17 +3,90 @@ const GET_OWN_PROPERTY_NAMES = Object.getOwnPropertyNames;
 const TO_STRING = Object.prototype.toString;
 
 /**
+ * Determines if object is of type Array
+ *
+ * @param {*} object
+ * @returns {boolean}
+ */
+export const isArray = (object) => TO_STRING.call(object) === '[object Array]';
+
+/**
+ * Determines if object is of type Object
+ *
+ * @param {*} object
+ * @returns {boolean}
+ */
+export const isObject = (object) => TO_STRING.call(object) === '[object Object]' && !!object;
+
+/**
+ * Determines if object is an instance of a class
+ *
+ * @param {*} object
+ * @returns {boolean}
+ */
+export const isClassInstance = (object) =>
+  isObject(object) && Object.getPrototypeOf(object).constructor !== Object.prototype.constructor;
+
+/**
+ * Determines if object is of type Date
+ * Not exported because not used elsewhere
+ *
+ * @param {*} object
+ * @returns {boolean}
+ */
+export const isDate = (object) => TO_STRING.call(object) === '[object Date]';
+
+/**
+ * Determines if object is of type Function
+ *
+ * @param {*} object
+ * @returns {boolean}
+ */
+export const isFunction = (object) => TO_STRING.call(object) === '[object Function]' || typeof object === 'function';
+
+/**
+ * Determine if object is instance of Constructor
+ *
+ * @param {*} object
+ * @param {Function} Constructor
+ * @returns {boolean}
+ */
+export const isInstanceOf = (object, Constructor) => object instanceof Constructor;
+
+/**
+ * Determines if we are in production or not, based on NODE_ENV
+ *
+ * @returns {boolean}
+ */
+export const isProduction = () => process.env.NODE_ENV === 'production';
+
+/**
+ * Determines if object is of type String
+ *
+ * @param {*} object
+ * @returns {boolean}
+ */
+export const isString = (object) => TO_STRING.call(object) === '[object String]';
+
+/**
+ * Determines if object is undefined
+ *
+ * @param {*} object
+ * @returns {boolean}
+ */
+export const isUndefined = (object) => object === void 0;
+
+/**
  * Binds function to thisArg
  *
  * @param {Function} fn
  * @param {Object} thisArg
  * @returns {Function}
  */
-export const bindFunction = (fn, thisArg) => {
-  return function (...args) {
+export const bindFunction = (fn, thisArg) =>
+  function(...args) {
     return fn.apply(thisArg, args);
   };
-};
 
 /**
  * Finds the index in the array where the callback returns a truthy value
@@ -58,9 +131,7 @@ export const forEachObject = (object, fn) => {
  */
 export const getClone = (object, SingulumStore) => {
   if (isArray(object)) {
-    return object.map((item) => {
-      return getClone(item, SingulumStore);
-    });
+    return object.map((item) => getClone(item, SingulumStore));
   }
 
   if (isObject(object)) {
@@ -84,13 +155,31 @@ export const getClone = (object, SingulumStore) => {
   return object;
 };
 
+const setMutableProperty = (object, property, targetObject) => {
+  const descriptor = Object.getOwnPropertyDescriptor(object, property) || {};
+
+  let value = object[property];
+
+  if (isArray(value) || isObject(value)) {
+    // eslint-disable-next-line no-use-before-define
+    value = getMutableObject(value);
+  }
+
+  DEFINE_PROPERTY(targetObject, property, {
+    configurable: true,
+    enumerable: descriptor.enumerable || true,
+    value,
+    writable: true,
+  });
+};
+
 /**
  * Returns mutable version of object passed
  *
  * @param {*} object
  * @returns {*}
  */
-export const getMutableObject = (object) => {
+export function getMutableObject(object) {
   const isObjectArray = isArray(object);
 
   if (!isObjectArray & !isObject(object)) {
@@ -110,150 +199,7 @@ export const getMutableObject = (object) => {
   }
 
   return mutableObject;
-};
-
-/**
- * Build integer hashCode from object
- *
- * @param {*} object
- * @returns {number}
- */
-export const hashCode = (object, Singulum) => {
-  const serializedObject = serialize(object, Singulum);
-
-  if (serializedObject === '') {
-    return 0;
-  }
-
-  let hashCode = 0,
-      char;
-
-  for (let index = 0, length = serializedObject.length; index < length; index++) {
-    char = serializedObject.charCodeAt(index);
-    hashCode = ((hashCode << 5) - hashCode) + char;
-    hashCode |= 0;
-  }
-
-  return hashCode;
-};
-
-/**
- * Determines if object is of type Array
- *
- * @param {*} object
- * @returns {boolean}
- */
-export const isArray = (object) => {
-  return TO_STRING.call(object) === '[object Array]';
-};
-
-/**
- * Determines if object is an instance of a class
- *
- * @param {*} object
- * @returns {boolean}
- */
-export const isClassInstance = (object) => {
-  return isObject(object) && Object.getPrototypeOf(object).constructor !== Object.prototype.constructor;
-};
-
-/**
- * Determines if object is of type Date
- * Not exported because not used elsewhere
- *
- * @param {*} object
- * @returns {boolean}
- */
-export const isDate = (object) => {
-  return TO_STRING.call(object) === '[object Date]';
-};
-
-/**
- * Determines if the two objects have equal values (checks deeply)
- *
- * @param {*} object1
- * @param {*} object2
- * @returns {*}
- */
-export const isEqual = (object1, object2, Singulum) => {
-  return hashCode(object1, Singulum) === hashCode(object2, Singulum);
-};
-
-/**
- * Determines if object is of type Function
- *
- * @param {*} object
- * @returns {boolean}
- */
-export const isFunction = (object) => {
-  return TO_STRING.call(object) === '[object Function]' || typeof object === 'function';
-};
-
-/**
- * Determine if object is instance of Constructor
- *
- * @param {*} object
- * @param {Function} Constructor
- * @returns {boolean}
- */
-export const isInstanceOf = (object, Constructor) => {
-  return object instanceof Constructor;
-};
-
-/**
- * Determines if object is of type Object
- *
- * @param {*} object
- * @returns {boolean}
- */
-export const isObject = (object) => {
-  return TO_STRING.call(object) === '[object Object]' && !!object;
-};
-
-/**
- * Determines if we are in production or not, based on NODE_ENV
- *
- * @returns {boolean}
- */
-export const isProduction = () => {
-  return process.env.NODE_ENV === 'production';
-};
-
-/**
- * Determines if object is of type String
- *
- * @param {*} object
- * @returns {boolean}
- */
-export const isString = (object) => {
-  return TO_STRING.call(object) === '[object String]';
-};
-
-/**
- * Determines if object is undefined
- *
- * @param {*} object
- * @returns {boolean}
- */
-export const isUndefined = (object) => {
-  return object === void 0;
-};
-
-/**
- * Set property to be non-enumerable
- *
- * @param {Object} object
- * @param {string} property
- * @param {*} value
- */
-export const setHidden = (object, property, value) => {
-  DEFINE_PROPERTY(object, property, {
-    configurable: true,
-    enumerable: false,
-    value,
-    writable: true
-  });
-};
+}
 
 /**
  * Serialize object into string value, to be used for hashing
@@ -261,7 +207,7 @@ export const setHidden = (object, property, value) => {
  * @param {*} object
  * @returns {string}
  */
-const serialize = (object, Singulum) => {
+export const serialize = (object, Singulum) => {
   if (isInstanceOf(object, Singulum)) {
     object = object.store;
   }
@@ -283,20 +229,53 @@ const serialize = (object, Singulum) => {
   return serializedCode.replace(/\s/g, '');
 };
 
-const setMutableProperty = (object, property, targetObject) => {
-  const descriptor = Object.getOwnPropertyDescriptor(object, property) || {};
+/**
+ * Build integer hashCode from object
+ *
+ * @param {*} object
+ * @returns {number}
+ */
+export const hashCode = (object, Singulum) => {
+  const serializedObject = serialize(object, Singulum);
 
-  let value = object[property];
-
-  if (isArray(value) || isObject(value)) {
-    value = getMutableObject(value);
+  if (serializedObject === '') {
+    return 0;
   }
 
-  DEFINE_PROPERTY(targetObject, property, {
+  let hashCode = 0,
+      char;
+
+  for (let index = 0, length = serializedObject.length; index < length; index++) {
+    char = serializedObject.charCodeAt(index);
+    hashCode = (hashCode << 5) - hashCode + char;
+    hashCode |= 0;
+  }
+
+  return hashCode;
+};
+
+/**
+ * Determines if the two objects have equal values (checks deeply)
+ *
+ * @param {*} object1
+ * @param {*} object2
+ * @returns {*}
+ */
+export const isEqual = (object1, object2, Singulum) => hashCode(object1, Singulum) === hashCode(object2, Singulum);
+
+/**
+ * Set property to be non-enumerable
+ *
+ * @param {Object} object
+ * @param {string} property
+ * @param {*} value
+ */
+export const setHidden = (object, property, value) => {
+  DEFINE_PROPERTY(object, property, {
     configurable: true,
-    enumerable: descriptor.enumerable || true,
+    enumerable: false,
     value,
-    writable: true
+    writable: true,
   });
 };
 
@@ -336,7 +315,7 @@ export const setImmutable = (object, property, value, descriptor = {}) => {
       break;
 
     case isFunction(value):
-      realValue = function (...args) {
+      realValue = function(...args) {
         return value.apply(this, args);
       };
 
@@ -354,17 +333,28 @@ export const setImmutable = (object, property, value, descriptor = {}) => {
   }
 
   DEFINE_PROPERTY(object, property, {
+    configurable: false,
+    enumerable: descriptor.enumerable || true,
     get() {
       return realValue;
     },
     set() {
-      throw new SyntaxError(`You are trying to set a value on an immutable object which is not allowed. Check the assignment of property ${property}.`);
+      throw new SyntaxError(
+        `You are trying to set a value on an immutable object which is not allowed. Check the assignment of property ${property}.`
+      );
     },
-    configurable: false,
-    enumerable: descriptor.enumerable || true
   });
 
   return object[property];
+};
+
+/**
+ * Consolidated error throwing function, mainly for minification benefits
+ *
+ * @param {string} error
+ */
+export const throwError = (error) => {
+  throw new Error(error);
 };
 
 /**
@@ -381,17 +371,8 @@ export const setReadonly = (object, property, value) => {
     },
     set() {
       throwError(`Cannot set a value for ${property}, as it is immutable.`);
-    }
+    },
   });
-};
-
-/**
- * Consolidated error throwing function, mainly for minification benefits
- *
- * @param {string} error
- */
-export const throwError = (error) => {
-  throw new Error(error);
 };
 
 export default {
@@ -414,5 +395,5 @@ export default {
   setHidden,
   setImmutable,
   setReadonly,
-  throwError
+  throwError,
 };
