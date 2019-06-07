@@ -2,7 +2,7 @@
  * Library: singulum
  * Description: State management sanity with minimal effort
  * Author: planttheidea
- * Version: 1.0.0
+ * Version: 1.0.1
  * License: MIT
  */
 (function webpackUniversalModuleDefinition(root, factory) {

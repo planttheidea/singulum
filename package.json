@@ -5,7 +5,7 @@
   },
   "description": "State management sanity with minimal effort",
   "devDependencies": {
-    "axios": "^0.9.1",
+    "axios": "^0.19.0",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.0.1",
